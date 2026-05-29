@@ -471,7 +471,7 @@ const calDays = tr['cal.days'];
 if (calDays) this._calDays = calDays.split(',');
 const configLang = document.getElementById('configLang');
 if (configLang) {
-configLang.value = lang === 'en' ? 'English' : lang === 'es' ? 'Español' : 'Português (BR)';
+configLang.value = lang;
 }
 if (state.tasks) renderKanban();
 if (state.transactions) renderTransactions($('#transFilterSelect')?.value || 'all', $('#transSearchInput')?.value || '');
@@ -1732,15 +1732,21 @@ toast(`Período atualizado: ${e.target.selectedOptions[0].textContent}`, 'info')
 
         $('#viewAllTransBtn').addEventListener('click', () => navigateTo('transacoes'));
 
-        $('#saveProfileBtn').addEventListener('click', () => {
-    const name = $('#configName').value.trim();
-    const email = $('#configEmail').value.trim();
-    if (name) {
-      $('.user-name').textContent = name;
-      $('.user-role').textContent = email || 'Admin';
-    }
-    toast('Perfil atualizado com sucesso', 'success');
-  });
+$('#saveProfileBtn').addEventListener('click', () => {
+const name = $('#configName').value.trim();
+const email = $('#configEmail').value.trim();
+if (name) {
+$('.user-name').textContent = name;
+$('.user-role').textContent = email || 'Admin';
+}
+toast('Perfil atualizado com sucesso', 'success');
+});
+
+$('#configLang').addEventListener('change', (e) => {
+const map = { 'Português (BR)': 'pt-BR', 'English': 'en', 'Español': 'es' };
+const lang = map[e.target.value] || 'pt-BR';
+i18n.setLang(lang);
+});
         $('#saveSecurityBtn').addEventListener('click', () => toast('Configurações de segurança salvas', 'success'));
 
   const toggle2FA = $('#toggle2FA');
@@ -1767,7 +1773,9 @@ toast(`Período atualizado: ${e.target.selectedOptions[0].textContent}`, 'info')
 
 // INIT
 async function initAuth() {
-  const authScreen = $('#authScreen');
+i18n.loadSavedLang();
+i18n.applyAll();
+const authScreen = $('#authScreen');
   const appContainer = $('#appContainer');
   const loginForm = $('#loginForm');
   const signupForm = $('#signupForm');
@@ -2042,7 +2050,7 @@ async function initAuth() {
 }
 
 function initDashboard() {
-  const banner = $('#weeklyResetBanner');
+const banner = $('#weeklyResetBanner');
   const bannerDismiss = $('#bannerDismiss');
   if (banner && bannerDismiss) {
     if (localStorage.getItem('nexus_banner_dismissed')) banner.classList.add('hidden');
