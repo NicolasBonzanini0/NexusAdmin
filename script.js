@@ -1,10 +1,127 @@
 (function () {
-    'use strict';
+'use strict';
 
-    const $ = (sel, ctx = document) => ctx.querySelector(sel);
-    const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+
+// CRYPTO LAYER
+const crypto = {
+  _salt: 'nexus_2026_salt',
+  async sha256(str) {
+    const encoded = new TextEncoder().encode(str + this._salt);
+    const hash = await cryptoSubtle.digest('SHA-256', encoded);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  },
+  _encKey: null,
+  async _getKey() {
+    if (this._encKey) return this._encKey;
+    const keyMat = await cryptoSubtle.importKey('raw', new TextEncoder().encode('NexusAdmin_AES_2026!@#'), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+    this._encKey = keyMat;
+    return keyMat;
+  },
+  async encrypt(text) {
+    try {
+      const iv = cryptoSubtle.getRandomValues(new Uint8Array(12));
+      const key = await this._getKey();
+      const enc = await cryptoSubtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+      const combined = new Uint8Array(iv.length + new Uint8Array(enc).length);
+      combined.set(iv); combined.set(new Uint8Array(enc), iv.length);
+      return btoa(String.fromCharCode(...combined));
+    } catch(e) { return text; }
+  },
+  async decrypt(cipher) {
+    try {
+      const raw = Uint8Array.from(atob(cipher), c => c.charCodeAt(0));
+      const iv = raw.slice(0, 12);
+      const data = raw.slice(12);
+      const key = await this._getKey();
+      const dec = await cryptoSubtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+      return new TextDecoder().decode(dec);
+    } catch(e) { return cipher; }
+  },
+  hashPw(pw) { return this.sha256(pw); }
+};
+const cryptoSubtle = window.crypto.subtle || window.crypto.webkitSubtle;
+
+// SUPABASE DB LAYER
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+let sb = null;
+try { if (SUPABASE_URL && SUPABASE_KEY && window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) {}
+
+const db = {
+  _encPrefix: '__enc__',
+  async _encWrap(val) { const s = JSON.stringify(val); const e = await crypto.encrypt(s); return this._encPrefix + e; },
+  async _encUnwrap(raw) { if (typeof raw !== 'string' || !raw.startsWith(this._encPrefix)) return raw; const e = raw.slice(this._encPrefix.length); const d = await crypto.decrypt(e); try { return JSON.parse(d); } catch(x) { return raw; } },
+  _lsKey(prefix, email) { return prefix + '_' + email; },
+  async get(key, email) {
+    const lsKey = this._lsKey(key, email);
+    if (sb) {
+      try {
+        const { data } = await sb.from('user_data').select('value').eq('key', lsKey).single();
+        if (data && data.value) { const v = await this._encUnwrap(data.value); localStorage.setItem(lsKey, JSON.stringify(v)); return v; }
+      } catch(e) {}
+    }
+    const raw = localStorage.getItem(lsKey);
+    if (!raw) return null;
+    try { const v = await this._encUnwrap(JSON.parse(raw)); return v; } catch(x) { return null; }
+  },
+  async set(key, email, value) {
+    const lsKey = this._lsKey(key, email);
+    const wrapped = await this._encWrap(value);
+    localStorage.setItem(lsKey, JSON.stringify(wrapped));
+    if (sb) {
+      try { await sb.from('user_data').upsert({ key: lsKey, email, value: wrapped, updated_at: new Date().toISOString() }, { onConflict: 'key' }); } catch(e) {}
+    }
+  },
+  async remove(key, email) {
+    const lsKey = this._lsKey(key, email);
+    localStorage.removeItem(lsKey);
+    if (sb) { try { await sb.from('user_data').delete().eq('key', lsKey); } catch(e) {} }
+  },
+  async getAllUsers() {
+    if (sb) {
+      try {
+        const { data } = await sb.from('users').select('*');
+        if (data && data.length) {
+          const users = data.map(r => ({ email: r.email, name: r.name, password: r.password, twoFa: !!r.two_fa }));
+          localStorage.setItem('nexus_users', JSON.stringify(users));
+          return users;
+        }
+      } catch(e) {}
+    }
+    return JSON.parse(localStorage.getItem('nexus_users') || '[]');
+  },
+  async saveAllUsers(users) {
+    localStorage.setItem('nexus_users', JSON.stringify(users));
+    if (sb) {
+      try {
+        for (const u of users) {
+          const hashedPw = u.password.length === 64 ? u.password : await crypto.hashPw(u.password);
+          if (u.password.length !== 64) u.password = hashedPw;
+          await sb.from('users').upsert({ email: u.email, name: u.name, password: hashedPw, two_fa: !!u.twoFa, updated_at: new Date().toISOString() }, { onConflict: 'email' });
+        }
+        localStorage.setItem('nexus_users', JSON.stringify(users));
+      } catch(e) {}
+    }
+  },
+  needsWeeklyReset() {
+    const lastReset = localStorage.getItem('nexus_last_reset');
+    if (!lastReset) { localStorage.setItem('nexus_last_reset', Date.now().toString()); return false; }
+    const daysSince = (Date.now() - parseInt(lastReset)) / (1000 * 60 * 60 * 24);
+    return daysSince >= 7;
+  },
+  doWeeklyReset() {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('nexus_profiles_') || k.startsWith('nexus_data_'));
+    keys.forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('nexus_last_reset', Date.now().toString());
+    if (sb) { try { sb.from('user_data').delete().neq('key', '__keep__'); } catch(e) {} }
+  }
+};
 
     const state = {
+authUsers: [],
+currentUser: null,
         users: [
             { id: 1, name: 'Ana Silva', email: 'ana@nexus.io', role: 'Admin', status: 'Ativo', seed: 'Ana' },
             { id: 2, name: 'Carlos Mendes', email: 'carlos@nexus.io', role: 'Editor', status: 'Ativo', seed: 'Carlos' },
@@ -75,10 +192,52 @@
             { type: 'warning', text: 'Senha alterada — recomendação: ativar 2FA', time: '07:30' },
             { type: 'success', text: 'Certificado SSL renovado automaticamente', time: '07:00' },
         ],
-        nextId: 100,
-    };
+  nextId: 100,
+  _defaultTasks: null,
+  _defaultTransactions: null,
+  _defaultProjects: null,
+  _defaultTeam: null,
+  _defaultEvents: null,
+  };
 
-    function toast(msg, type = 'info') {
+    async function loadUserProfile() {
+    if (!state.currentUser) return;
+    if (!state._defaultTasks) {
+      state._defaultTasks = JSON.parse(JSON.stringify(state.tasks));
+      state._defaultTransactions = JSON.parse(JSON.stringify(state.transactions));
+      state._defaultTeam = JSON.parse(JSON.stringify(state.team));
+      state._defaultEvents = JSON.parse(JSON.stringify(state.events));
+    }
+    if (state.currentUser.demo) return;
+    const email = state.currentUser.email;
+    const stored = await db.get('nexus_profiles', email);
+    if (stored && stored.tasks) {
+      state.tasks = stored.tasks;
+      state.transactions = stored.transactions || [];
+      state.events = stored.events || state._defaultEvents;
+    } else {
+      const seed = state.currentUser.name.split(' ')[0];
+      state.tasks = [
+        { id: 1, title: 'Configurar ambiente', desc: 'Instalar dependências e configurar projeto', priority: 'high', status: 'todo', seed: seed + '1' },
+        { id: 2, title: 'Primeiro deploy', desc: 'Fazer deploy inicial do projeto', priority: 'high', status: 'progress', seed: seed + '2' },
+        { id: 3, title: 'Revisão de código', desc: 'Revisar e ajustar padrões de código', priority: 'medium', status: 'todo', seed: seed + '3' },
+      ];
+      state.transactions = [
+        { id: 'TXN-001', client: state.currentUser.name, type: 'Assinatura', value: 'R$ 99,00', status: 'success', date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }), seed: seed },
+      ];
+      state.events = state._defaultEvents;
+      saveUserProfile();
+    }
+    state.team = state._defaultTeam.filter(m => m.name !== state.currentUser.name);
+    if (!state.team.length) state.team = [{ name: state.currentUser.name, role: 'Proprietário', status: 'online', tasks: state.tasks.length, projects: 1, seed: seed }];
+  }
+
+  async function saveUserProfile() {
+    if (!state.currentUser || state.currentUser.demo) return;
+    await db.set('nexus_profiles', state.currentUser.email, { tasks: state.tasks, transactions: state.transactions, events: state.events });
+  }
+
+  function toast(msg, type = 'info') {
         const icons = { success: 'fa-check-circle', error: 'fa-xmark-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
         const t = document.createElement('div');
         t.className = `toast ${type}`;
@@ -184,12 +343,12 @@ function initCharts() {
   Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
   Chart.defaults.font.family = "'Inter', sans-serif";
 
-  const periods = {
-    '7d': { labels: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'], rev: [4200,3800,4500,5100,4900,5600,5800], exp: [2800,2600,3000,3400,3100,3600,3800] },
-    '30d': { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], rev: [18500,22300,19800,27400,25600,31200,28900,35100,32400,38700,36200,42100], exp: [12400,14200,13800,16500,15200,18700,17100,21300,19800,23400,22100,25600] },
-    '90d': { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], rev: [52000,58000,61000,55000,64000,71000,68000,75000,82000,78000,85000,91000], exp: [38000,42000,45000,40000,47000,52000,49000,55000,60000,57000,63000,68000] },
-    '1y': { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], rev: [120000,135000,142000,150000,158000,170000,165000,180000,195000,188000,210000,225000], exp: [85000,92000,98000,105000,110000,118000,115000,125000,135000,130000,145000,155000] },
-  };
+const periods = {
+'7d': { labels: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'], rev: [4200,3800,4500,5100,4900,5600,5800], exp: [2800,2600,3000,3400,3100,3600,3800], dash: { receita: 33900, usuarios: 1240, pedidos: 312, conversao: '71.2%', receitaChange: '+18.3%', usuariosChange: '+8.1%', pedidosChange: '-1.5%', conversaoChange: '+3.2%', receitaDir: 'positive', usuariosDir: 'positive', pedidosDir: 'negative', conversaoDir: 'positive' }, analytics: { pageviews: '24.5K', tempoMedio: '3m 18s', bounce: '35.1%', retencao: '62.8%', pageviewsChange: '+12%', tempoMedioChange: '+4%', bounceChange: '+1.8%', retencaoChange: '+3%', pageviewsDir: 'positive', tempoMedioDir: 'positive', bounceDir: 'negative', retencaoDir: 'positive' }, trans: { total: 312, concluidas: 268, pendentes: 31, canceladas: 13 } },
+'30d': { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], rev: [18500,22300,19800,27400,25600,31200,28900,35100,32400,38700,36200,42100], exp: [12400,14200,13800,16500,15200,18700,17100,21300,19800,23400,22100,25600], dash: { receita: 284590, usuarios: 8432, pedidos: 1924, conversao: '68.7%', receitaChange: '+23.5%', usuariosChange: '+12.8%', pedidosChange: '-3.2%', conversaoChange: '+5.1%', receitaDir: 'positive', usuariosDir: 'positive', pedidosDir: 'negative', conversaoDir: 'positive' }, analytics: { pageviews: '142.8K', tempoMedio: '4m 32s', bounce: '32.4%', retencao: '67.2%', pageviewsChange: '+18%', tempoMedioChange: '+8%', bounceChange: '-2.1%', retencaoChange: '+5%', pageviewsDir: 'positive', tempoMedioDir: 'positive', bounceDir: 'negative', retencaoDir: 'positive' }, trans: { total: 1247, concluidas: 1089, pendentes: 112, canceladas: 46 } },
+'90d': { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], rev: [52000,58000,61000,55000,64000,71000,68000,75000,82000,78000,85000,91000], exp: [38000,42000,45000,40000,47000,52000,49000,55000,60000,57000,63000,68000], dash: { receita: 790000, usuarios: 24100, pedidos: 5670, conversao: '72.4%', receitaChange: '+31.2%', usuariosChange: '+18.5%', pedidosChange: '+5.8%', conversaoChange: '+7.3%', receitaDir: 'positive', usuariosDir: 'positive', pedidosDir: 'positive', conversaoDir: 'positive' }, analytics: { pageviews: '428.5K', tempoMedio: '5m 12s', bounce: '28.7%', retencao: '74.1%', pageviewsChange: '+24%', tempoMedioChange: '+12%', bounceChange: '-5.4%', retencaoChange: '+9%', pageviewsDir: 'positive', tempoMedioDir: 'positive', bounceDir: 'negative', retencaoDir: 'positive' }, trans: { total: 5670, concluidas: 4980, pendentes: 490, canceladas: 200 } },
+'1y': { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], rev: [120000,135000,142000,150000,158000,170000,165000,180000,195000,188000,210000,225000], exp: [85000,92000,98000,105000,110000,118000,115000,125000,135000,130000,145000,155000], dash: { receita: 2038000, usuarios: 48200, pedidos: 14200, conversao: '74.8%', receitaChange: '+42.1%', usuariosChange: '+28.3%', pedidosChange: '+15.6%', conversaoChange: '+11.2%', receitaDir: 'positive', usuariosDir: 'positive', pedidosDir: 'positive', conversaoDir: 'positive' }, analytics: { pageviews: '1.2M', tempoMedio: '6m 08s', bounce: '25.3%', retencao: '79.5%', pageviewsChange: '+35%', tempoMedioChange: '+18%', bounceChange: '-8.2%', retencaoChange: '+14%', pageviewsDir: 'positive', tempoMedioDir: 'positive', bounceDir: 'negative', retencaoDir: 'positive' }, trans: { total: 14200, concluidas: 12540, pendentes: 1120, canceladas: 540 } },
+};
 
   charts.revenue = new Chart($('#revenueChart'), {
     type: 'line',
@@ -287,7 +446,7 @@ function initCharts() {
                 dropdown.classList.remove('open');
                 if (action === 'profile') navigateTo('config');
                 else if (action === 'settings') navigateTo('config');
-                else if (action === 'logout') toast('Sessão encerrada com sucesso', 'success');
+                else if (action === 'logout') { localStorage.removeItem('nexus_session'); state.currentUser = null; location.reload(); }
             });
         });
     }
@@ -309,12 +468,16 @@ function initCharts() {
             $('#messagePanel').classList.remove('open');
             $('#overlay').classList.toggle('active');
         });
-        $('#markAllReadBtn').addEventListener('click', () => {
-            $$('.notif-item.unread').forEach(i => i.classList.remove('unread'));
-            $('#notifCount').textContent = '0';
-            $('#notifCount').style.display = 'none';
-            toast('Todas as notificações marcadas como lidas', 'success');
-        });
+$('#markAllReadBtn').addEventListener('click', () => {
+$$('.notif-item.unread').forEach(i => i.classList.remove('unread'));
+$('#notifCount').textContent = '0';
+$('#notifCount').style.display = 'none';
+toast('Todas as notificações marcadas como lidas', 'success');
+});
+$('#closeNotifBtn').addEventListener('click', () => {
+$('#notifPanel').classList.remove('open');
+$('#overlay').classList.remove('active');
+});
         $$('.notif-item').forEach(item => {
             item.addEventListener('click', () => {
                 item.classList.remove('unread');
@@ -501,27 +664,24 @@ function initTheme() {
       o.classList.toggle('active', (isLight && o.dataset.theme === 'light') || (!isLight && o.dataset.theme === 'dark'));
     });
   });
-  $$('.theme-option').forEach(opt => {
-    opt.addEventListener('click', () => {
-      $$('.theme-option').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      const theme = opt.dataset.theme;
-      if (theme === 'light') {
-        document.body.classList.add('light-theme');
-        $('#themeToggle').querySelector('i').className = 'fas fa-sun';
-      } else if (theme === 'dark') {
-        document.body.classList.remove('light-theme');
-        $('#themeToggle').querySelector('i').className = 'fas fa-moon';
-      }
-    });
-  });
-  $$('.color-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      $$('.color-dot').forEach(d => d.classList.remove('active'));
-      dot.classList.add('active');
-      document.documentElement.style.setProperty('--accent', dot.dataset.color);
-    });
-  });
+$$('.theme-option').forEach(opt => {
+opt.addEventListener('click', () => {
+$$('.theme-option').forEach(o => o.classList.remove('active'));
+opt.classList.add('active');
+const theme = opt.dataset.theme;
+if (theme === 'light') {
+document.body.classList.add('light-theme');
+$('#themeToggle').querySelector('i').className = 'fas fa-sun';
+} else if (theme === 'dark') {
+document.body.classList.remove('light-theme');
+$('#themeToggle').querySelector('i').className = 'fas fa-moon';
+} else if (theme === 'auto') {
+const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+document.body.classList.toggle('light-theme', prefersLight);
+$('#themeToggle').querySelector('i').className = prefersLight ? 'fas fa-sun' : 'fas fa-moon';
+}
+});
+});
 }
 
     // USERS
@@ -655,9 +815,20 @@ function initUsersPage() {
             </tr>
         `).join('');
     }
-    function initTransactions() {
-        $('#transFilterSelect').addEventListener('change', e => renderTransactions(e.target.value, $('#transSearchInput').value));
-        $('#transSearchInput').addEventListener('input', e => renderTransactions($('#transFilterSelect').value, e.target.value));
+function initTransactions() {
+$('#transFilterSelect').addEventListener('change', e => renderTransactions(e.target.value, $('#transSearchInput').value));
+$('#transSearchInput').addEventListener('input', e => renderTransactions($('#transFilterSelect').value, e.target.value));
+$('#transPeriodSelect').addEventListener('change', e => {
+const p = charts._periods[e.target.value];
+if (p && p.trans) {
+const t = p.trans;
+const tt = $('#transTotal'); if (tt) tt.textContent = Number(t.total).toLocaleString('pt-BR');
+const tc = $('#transConcluidas'); if (tc) tc.textContent = Number(t.concluidas).toLocaleString('pt-BR');
+const tp = $('#transPendentes'); if (tp) tp.textContent = Number(t.pendentes).toLocaleString('pt-BR');
+const tx = $('#transCanceladas'); if (tx) tx.textContent = Number(t.canceladas).toLocaleString('pt-BR');
+toast(`Período atualizado: ${e.target.selectedOptions[0].textContent}`, 'info');
+}
+});
         $('#newTransBtn').addEventListener('click', () => {
             openModal('Nova Transação', `
                 <div class="form-group"><label>Cliente</label><input type="text" class="form-input" id="newTransClient" placeholder="Nome do cliente"></div>
@@ -723,26 +894,47 @@ function renderKanban() {
     const tasks = state.tasks.filter(t => t.status === status);
     const list = $(`#${elId}`);
     if (!list) return;
-    list.innerHTML = tasks.map(t => `
-      <div class="kanban-card" draggable="true" data-task-id="${t.id}">
-        <div class="kanban-card-title">${t.title}</div>
-        <div class="kanban-card-desc">${t.desc}</div>
-        <div class="kanban-card-footer">
-          <span class="kanban-card-priority ${t.priority}">${t.priority === 'high' ? 'Alta' : t.priority === 'medium' ? 'Média' : 'Baixa'}</span>
-          <img class="kanban-card-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=${t.seed}" alt="">
-        </div>
-      </div>
-    `).join('');
+list.innerHTML = tasks.map(t => `
+<div class="kanban-card" draggable="true" data-task-id="${t.id}">
+<div class="kanban-card-title">${t.title}</div>
+<div class="kanban-card-desc">${t.desc}</div>
+<div class="kanban-card-footer">
+<span class="kanban-card-priority ${t.priority}">${t.priority === 'high' ? 'Alta' : t.priority === 'medium' ? 'Média' : 'Baixa'}</span>
+<div class="kanban-move-btns">
+<button class="kanban-move-btn" data-task-id="${t.id}" data-dir="left" title="Mover para esquerda"><i class="fas fa-chevron-left"></i></button>
+<button class="kanban-move-btn" data-task-id="${t.id}" data-dir="right" title="Mover para direita"><i class="fas fa-chevron-right"></i></button>
+</div>
+<img class="kanban-card-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=${t.seed}" alt="">
+</div>
+</div>
+`).join('');
     const countEl = $(`#${status}Count`);
     if (countEl) countEl.textContent = tasks.length;
 
-    list.querySelectorAll('.kanban-card').forEach(card => {
-      card.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', card.dataset.taskId);
-        card.classList.add('dragging');
-      });
-      card.addEventListener('dragend', () => card.classList.remove('dragging'));
-    });
+list.querySelectorAll('.kanban-card').forEach(card => {
+card.addEventListener('dragstart', e => {
+e.dataTransfer.setData('text/plain', card.dataset.taskId);
+card.classList.add('dragging');
+});
+card.addEventListener('dragend', () => card.classList.remove('dragging'));
+});
+list.querySelectorAll('.kanban-move-btn').forEach(btn => {
+btn.addEventListener('click', e => {
+e.stopPropagation();
+const taskId = parseInt(btn.dataset.taskId);
+const dir = btn.dataset.dir;
+const stages = ['todo', 'progress', 'review', 'done'];
+const task = state.tasks.find(t => t.id === taskId);
+if (!task) return;
+const curIdx = stages.indexOf(task.status);
+const newIdx = dir === 'left' ? curIdx - 1 : curIdx + 1;
+if (newIdx < 0 || newIdx >= stages.length) return;
+task.status = stages[newIdx];
+renderKanban();
+saveUserProfile();
+toast(`"${task.title}" movido para ${statusLabel(stages[newIdx])}`, 'info');
+});
+});
   });
 
   if (!kanbanDragBound) {
@@ -756,10 +948,11 @@ function renderKanban() {
         const taskId = parseInt(e.dataTransfer.getData('text/plain'));
         const newStatus = list.closest('.kanban-column').dataset.status;
         const task = state.tasks.find(t => t.id === taskId);
-        if (task) {
-          task.status = newStatus;
-          renderKanban();
-          toast(`"${task.title}" movido para ${statusLabel(newStatus)}`, 'info');
+      if (task) {
+        task.status = newStatus;
+        renderKanban();
+        saveUserProfile();
+        toast(`"${task.title}" movido para ${statusLabel(newStatus)}`, 'info');
         }
       });
     });
@@ -777,10 +970,9 @@ function renderKanban() {
             const priority = $('#newTaskPriority').value;
             if (!title) { toast('Informe o título da tarefa', 'error'); return; }
             state.nextId++;
-    state.tasks.push({ id: state.nextId, title, desc: desc || 'Sem descrição', priority, status: 'todo', seed: 'new' + state.nextId });
-    renderKanban();
-    updateBadges();
-    toast(`Tarefa "${title}" criada`, 'success');
+  state.tasks.push({ id: state.nextId, title, desc: desc || 'Sem descrição', priority, status: 'todo', seed: 'new' + state.nextId });
+  renderKanban(); updateBadges(); saveUserProfile();
+  toast(`Tarefa "${title}" criada`, 'success');
         });
     }
 
@@ -974,7 +1166,41 @@ function updateServerMetrics() {
         });
     }
 
-    // MISC BUTTONS
+    function updateStatsForPeriod(period) {
+const p = charts._periods[period];
+if (!p) return;
+const d = p.dash;
+if (d) {
+const rEl = $('#dashReceita'); if (rEl) rEl.textContent = 'R$ ' + Number(d.receita).toLocaleString('pt-BR');
+const uEl = $('#dashUsuarios'); if (uEl) uEl.textContent = Number(d.usuarios).toLocaleString('pt-BR');
+const pEl = $('#dashPedidos'); if (pEl) pEl.textContent = Number(d.pedidos).toLocaleString('pt-BR');
+const cEl = $('#dashConversao'); if (cEl) cEl.textContent = d.conversao;
+const rc = $('#dashReceitaChange'); if (rc) { rc.className = 'stat-change ' + d.receitaDir; rc.innerHTML = `<i class="fas fa-arrow-${d.receitaDir === 'positive' ? 'up' : 'down'}"></i> ${d.receitaChange}`; }
+const uc = $('#dashUsuariosChange'); if (uc) { uc.className = 'stat-change ' + d.usuariosDir; uc.innerHTML = `<i class="fas fa-arrow-${d.usuariosDir === 'positive' ? 'up' : 'down'}"></i> ${d.usuariosChange}`; }
+const pc = $('#dashPedidosChange'); if (pc) { pc.className = 'stat-change ' + d.pedidosDir; pc.innerHTML = `<i class="fas fa-arrow-${d.pedidosDir === 'positive' ? 'up' : 'down'}"></i> ${d.pedidosChange}`; }
+const cc = $('#dashConversaoChange'); if (cc) { cc.className = 'stat-change ' + d.conversaoDir; cc.innerHTML = `<i class="fas fa-arrow-${d.conversaoDir === 'positive' ? 'up' : 'down'}"></i> ${d.conversaoChange}`; }
+}
+const a = p.analytics;
+if (a) {
+const pv = $('#anPageviews'); if (pv) pv.textContent = a.pageviews;
+const tm = $('#anTempoMedio'); if (tm) tm.textContent = a.tempoMedio;
+const br = $('#anBounce'); if (br) br.textContent = a.bounce;
+const rt = $('#anRetencao'); if (rt) rt.textContent = a.retencao;
+const pvc = $('#anPageviewsChange'); if (pvc) { pvc.className = 'stat-change ' + a.pageviewsDir; pvc.innerHTML = `<i class="fas fa-arrow-${a.pageviewsDir === 'positive' ? 'up' : 'down'}"></i> ${a.pageviewsChange}`; }
+const tmc = $('#anTempoMedioChange'); if (tmc) { tmc.className = 'stat-change ' + a.tempoMedioDir; tmc.innerHTML = `<i class="fas fa-arrow-${a.tempoMedioDir === 'positive' ? 'up' : 'down'}"></i> ${a.tempoMedioChange}`; }
+const brc = $('#anBounceChange'); if (brc) { brc.className = 'stat-change ' + a.bounceDir; brc.innerHTML = `<i class="fas fa-arrow-${a.bounceDir === 'positive' ? 'up' : 'down'}"></i> ${a.bounceChange}`; }
+const rtc = $('#anRetencaoChange'); if (rtc) { rtc.className = 'stat-change ' + a.retencaoDir; rtc.innerHTML = `<i class="fas fa-arrow-${a.retencaoDir === 'positive' ? 'up' : 'down'}"></i> ${a.retencaoChange}`; }
+}
+const t = p.trans;
+if (t) {
+const tt = $('#transTotal'); if (tt) tt.textContent = Number(t.total).toLocaleString('pt-BR');
+const tc = $('#transConcluidas'); if (tc) tc.textContent = Number(t.concluidas).toLocaleString('pt-BR');
+const tp = $('#transPendentes'); if (tp) tp.textContent = Number(t.pendentes).toLocaleString('pt-BR');
+const tx = $('#transCanceladas'); if (tx) tx.textContent = Number(t.canceladas).toLocaleString('pt-BR');
+}
+}
+
+// MISC BUTTONS
     function initMiscButtons() {
   $('#exportBtn').addEventListener('click', () => {
     const data = { receita: 284590, usuarios: 8432, pedidos: 1924, conversao: '68.7%' };
@@ -986,16 +1212,17 @@ function updateServerMetrics() {
     toast('Dados exportados com sucesso', 'success');
   });
 
-  $('#periodSelect').addEventListener('change', e => {
-    const p = charts._periods[e.target.value];
-    if (p && charts.revenue) {
-      charts.revenue.data.labels = p.labels;
-      charts.revenue.data.datasets[0].data = p.rev;
-      charts.revenue.data.datasets[1].data = p.exp;
-      charts.revenue.update('active');
-      toast(`Período atualizado: ${e.target.selectedOptions[0].textContent}`, 'info');
-    }
-  });
+$('#periodSelect').addEventListener('change', e => {
+const p = charts._periods[e.target.value];
+if (p && charts.revenue) {
+charts.revenue.data.labels = p.labels;
+charts.revenue.data.datasets[0].data = p.rev;
+charts.revenue.data.datasets[1].data = p.exp;
+charts.revenue.update('active');
+updateStatsForPeriod(e.target.value);
+toast(`Período atualizado: ${e.target.selectedOptions[0].textContent}`, 'info');
+}
+});
 
         $('#viewAllTransBtn').addEventListener('click', () => navigateTo('transacoes'));
 
@@ -1010,6 +1237,17 @@ function updateServerMetrics() {
   });
         $('#saveSecurityBtn').addEventListener('click', () => toast('Configurações de segurança salvas', 'success'));
 
+  const toggle2FA = $('#toggle2FA');
+  if (toggle2FA && state.currentUser) {
+    toggle2FA.checked = !!state.currentUser.twoFa;
+    toggle2FA.addEventListener('change', async () => {
+      state.currentUser.twoFa = toggle2FA.checked;
+      const u = state.authUsers.find(u => u.email === state.currentUser.email);
+      if (u) { u.twoFa = toggle2FA.checked; await saveUsers(); }
+      toast(toggle2FA.checked ? '2FA ativado — na próxima login será solicitado o código' : '2FA desativado', toggle2FA.checked ? 'success' : 'warning');
+    });
+  }
+
         $('#newProjectBtn').addEventListener('click', showNewProjectModal);
         $('#newTaskBtn').addEventListener('click', showNewTaskModal);
         $('#newMemberBtn').addEventListener('click', () => toast('Convite enviado com sucesso', 'success'));
@@ -1021,9 +1259,290 @@ function updateServerMetrics() {
         });
     }
 
-    // INIT
-    function init() {
-        initParticles();
+// INIT
+async function initAuth() {
+  const authScreen = $('#authScreen');
+  const appContainer = $('#appContainer');
+  const loginForm = $('#loginForm');
+  const signupForm = $('#signupForm');
+  const tabs = $$('.auth-tab');
+  const signupPw = $('#signupPassword');
+  const strengthFill = $('#pwStrengthFill');
+  const strengthLabel = $('#pwStrengthLabel');
+
+  let twoFaCode = '';
+  let twoFaTimer = null;
+  let twoFaSeconds = 300;
+  let pendingLoginUser = null;
+
+  state.authUsers = await db.getAllUsers();
+  if (state.authUsers.length === 0) {
+    const defaultPw = await crypto.hashPw('admin123');
+    state.authUsers.push({ name: 'Admin Nexus', email: 'admin@nexus.io', password: defaultPw, twoFa: false, profile: { tasks: [], transactions: [], projects: [] } });
+    await db.saveAllUsers(state.authUsers);
+  }
+
+  if (db.needsWeeklyReset()) { db.doWeeklyReset(); }
+
+  async function verifyPw(inputPw, storedHash) {
+    if (storedHash.length !== 64) {
+      const h = await crypto.hashPw(storedHash);
+      if (h.length === 64) { const u = state.authUsers.find(u => u.password === storedHash); if (u) { u.password = h; saveUsers(); } return inputPw === storedHash; }
+      return inputPw === storedHash;
+    }
+    return (await crypto.hashPw(inputPw)) === storedHash;
+  }
+
+  function showApp(demoMode) {
+    if (demoMode) {
+      state.currentUser = { name: 'Usuário Demo', email: 'demo@nexus.io', demo: true, twoFa: false, profile: { tasks: [], transactions: [], projects: [] } };
+    }
+    authScreen.classList.add('hidden');
+    appContainer.style.display = '';
+    document.body.style.overflow = 'hidden';
+    if (state.currentUser) {
+      const nameEl = $('#sidebarUserName');
+      if (nameEl) nameEl.textContent = state.currentUser.name;
+      const avatarEl = $('#sidebarAvatar');
+      if (avatarEl) avatarEl.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(state.currentUser.name.split(' ')[0]);
+      const roleEl = $('.user-role');
+      if (roleEl) roleEl.textContent = state.currentUser.demo ? 'Demonstração' : (state.currentUser.email === 'admin@nexus.io' ? 'Super Admin' : 'Membro');
+      loadUserProfile();
+      const navUsuarios = $('#navUsuarios');
+      if (navUsuarios) {
+        const isAdmin = state.currentUser.email === 'admin@nexus.io' || state.currentUser.demo;
+        navUsuarios.style.display = isAdmin ? '' : 'none';
+      }
+    }
+    initDashboard();
+  }
+
+  async function saveUsers() { await db.saveAllUsers(state.authUsers); }
+
+  function generateCode() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  function openOverlay(id) { $(id).classList.add('visible'); }
+  function closeOverlay(id) { $(id).classList.remove('visible'); }
+
+  function startTwoFaTimer() {
+    twoFaSeconds = 300;
+    clearInterval(twoFaTimer);
+    updateCountdown();
+    twoFaTimer = setInterval(() => {
+      twoFaSeconds--;
+      updateCountdown();
+      if (twoFaSeconds <= 0) { clearInterval(twoFaTimer); toast('Código expirado', 'error'); closeOverlay('#twoFaOverlay'); }
+    }, 1000);
+  }
+
+  function updateCountdown() {
+    const m = String(Math.floor(twoFaSeconds / 60)).padStart(2, '0');
+    const s = String(twoFaSeconds % 60).padStart(2, '0');
+    const el = $('#twoFaCountdown');
+    if (el) el.textContent = m + ':' + s;
+  }
+
+  function sendTwoFaCode(user) {
+    twoFaCode = generateCode();
+    pendingLoginUser = user;
+    const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+    $('#twoFaEmail').textContent = maskedEmail;
+    $('#twoFaEmailUserName').textContent = user.name.split(' ')[0];
+    $('#twoFaEmailCode').textContent = twoFaCode;
+    $$('.twoFa-digit').forEach(d => { d.value = ''; });
+    $('#twoFaVerify').disabled = true;
+    openOverlay('#twoFaOverlay');
+    startTwoFaTimer();
+    setTimeout(() => openOverlay('#twoFaEmailPreview'), 300);
+  }
+
+  function verifyTwoFa() {
+    const entered = $$('.twoFa-digit').map(d => d.value).join('');
+    if (entered.length !== 6) { toast('Digite o código completo', 'error'); return; }
+    if (entered !== twoFaCode) { toast('Código incorreto', 'error'); $$('.twoFa-digit').forEach(d => { d.value = ''; d.focus(); }); $$('.twoFa-digit')[0].focus(); return; }
+    clearInterval(twoFaTimer);
+    closeOverlay('#twoFaOverlay');
+    closeOverlay('#twoFaEmailPreview');
+    state.currentUser = pendingLoginUser;
+    localStorage.setItem('nexus_session', pendingLoginUser.email);
+    toast('Verificação concluída! Bem-vindo, ' + pendingLoginUser.name.split(' ')[0] + '!', 'success');
+    showApp();
+  }
+
+  const saved = localStorage.getItem('nexus_session');
+  if (saved) {
+    const u = state.authUsers.find(u => u.email === saved);
+    if (u) { state.currentUser = u; showApp(); return; }
+  }
+
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const isLogin = tab.dataset.tab === 'login';
+    loginForm.style.display = isLogin ? '' : 'none';
+    signupForm.style.display = isLogin ? 'none' : '';
+  }));
+
+  $$('.auth-toggle-pw').forEach(btn => {
+    btn.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); });
+    btn.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      const input = $('#' + btn.dataset.target);
+      if (!input) return;
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') { input.type = 'text'; if (icon) icon.className = 'fas fa-eye-slash'; }
+      else { input.type = 'password'; if (icon) icon.className = 'fas fa-eye'; }
+    });
+  });
+
+  if (signupPw) signupPw.addEventListener('input', () => {
+    const v = signupPw.value;
+    let score = 0;
+    if (v.length >= 6) score++;
+    if (v.length >= 10) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const pct = (score / 5) * 100;
+    const colors = ['#ef4444', '#f59e0b', '#eab308', '#10b981', '#00d4ff'];
+    const labels = ['Muito fraca', 'Fraca', 'Razoável', 'Forte', 'Muito forte'];
+    strengthFill.style.width = pct + '%';
+    strengthFill.style.background = colors[Math.max(0, score - 1)] || '#ef4444';
+    strengthLabel.textContent = v.length === 0 ? 'Força da senha' : labels[Math.max(0, score - 1)] || '';
+    strengthLabel.style.color = v.length === 0 ? '' : colors[Math.max(0, score - 1)];
+  });
+
+  // 2FA digit input auto-advance
+  $$('.twoFa-digit').forEach((inp, i, all) => {
+    inp.addEventListener('input', () => {
+      if (inp.value.length === 1 && i < all.length - 1) all[i + 1].focus();
+      const full = all.map(d => d.value).join('');
+      const verifyBtn = $('#twoFaVerify');
+      verifyBtn.disabled = full.length !== 6;
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) { all[i - 1].focus(); all[i - 1].value = ''; }
+      if (e.key === 'Enter') verifyTwoFa();
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      paste.split('').forEach((ch, j) => { if (all[j]) all[j].value = ch; });
+      if (paste.length > 0) all[Math.min(paste.length, all.length) - 1].focus();
+      const full = all.map(d => d.value).join('');
+      $('#twoFaVerify').disabled = full.length !== 6;
+    });
+  });
+
+  // LOGIN
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('#loginEmail').value.trim();
+    const pw = $('#loginPassword').value;
+    const user = state.authUsers.find(u => u.email === email);
+    if (!user || !(await verifyPw(pw, user.password))) { toast('Email ou senha incorretos', 'error'); return; }
+    if (user.twoFa) { sendTwoFaCode(user); }
+    else { state.currentUser = user; localStorage.setItem('nexus_session', email); toast('Bem-vindo de volta, ' + user.name.split(' ')[0] + '!', 'success'); showApp(); }
+  });
+
+  // 2FA verify
+  $('#twoFaVerify').addEventListener('click', verifyTwoFa);
+  $('#twoFaResend').addEventListener('click', e => { e.preventDefault(); if (pendingLoginUser) { sendTwoFaCode(pendingLoginUser); toast('Código reenviado', 'success'); } });
+  $('#twoFaClose').addEventListener('click', () => { closeOverlay('#twoFaOverlay'); clearInterval(twoFaTimer); });
+  $('#twoFaEmailClose').addEventListener('click', () => closeOverlay('#twoFaEmailPreview'));
+  $('#twoFaEmailPreview').addEventListener('click', e => { if (e.target.id === 'twoFaEmailPreview') closeOverlay('#twoFaEmailPreview'); });
+
+  // SIGNUP
+  signupForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('#signupName').value.trim();
+    const email = $('#signupEmail').value.trim();
+    const pw = $('#signupPassword').value;
+    const confirm = $('#signupConfirm').value;
+    if (pw !== confirm) { toast('As senhas não coincidem', 'error'); return; }
+    if (pw.length < 6) { toast('A senha deve ter pelo menos 6 caracteres', 'error'); return; }
+    if (state.authUsers.find(u => u.email === email)) { toast('Este email já está cadastrado', 'error'); return; }
+    const hashedPw = await crypto.hashPw(pw);
+    const newUser = { name, email, password: hashedPw, twoFa: false, profile: { tasks: [], transactions: [], projects: [] } };
+    state.authUsers.push(newUser);
+    await saveUsers();
+    state.currentUser = newUser;
+    localStorage.setItem('nexus_session', email);
+    toast('Conta criada com sucesso!', 'success');
+    showApp();
+    $('#emailUserName').textContent = name.split(' ')[0];
+    setTimeout(() => openOverlay('#emailPreviewOverlay'), 400);
+  });
+
+  // WELCOME EMAIL PREVIEW
+  $('#emailPreviewClose').addEventListener('click', () => closeOverlay('#emailPreviewOverlay'));
+  $('#emailCtaBtn').addEventListener('click', () => closeOverlay('#emailPreviewOverlay'));
+  $('#emailPreviewOverlay').addEventListener('click', e => { if (e.target.id === 'emailPreviewOverlay') closeOverlay('#emailPreviewOverlay'); });
+
+  // FORGOT PASSWORD
+  $('#forgotPwLink').addEventListener('click', e => { e.preventDefault(); openOverlay('#forgotPwOverlay'); });
+  $('#forgotPwClose').addEventListener('click', () => closeOverlay('#forgotPwOverlay'));
+  $('#forgotPwForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = $('#forgotPwEmail').value.trim();
+    const user = state.authUsers.find(u => u.email === email);
+    if (!user) { toast('Email não encontrado', 'error'); return; }
+    localStorage.setItem('nexus_reset_email', email);
+    $('#resetEmailUserName').textContent = user.name.split(' ')[0];
+    $('#forgotPwForm').style.display = 'none';
+    $('#forgotSent').style.display = '';
+    toast('Link de redefinição enviado para ' + email, 'success');
+    setTimeout(() => openOverlay('#resetEmailPreview'), 400);
+  });
+  $('#forgotBackBtn').addEventListener('click', () => { closeOverlay('#forgotPwOverlay'); $('#forgotPwForm').style.display = ''; $('#forgotSent').style.display = 'none'; });
+  $('#resetEmailClose').addEventListener('click', () => closeOverlay('#resetEmailPreview'));
+  $('#resetEmailCta').addEventListener('click', () => { closeOverlay('#resetEmailPreview'); closeOverlay('#forgotPwOverlay'); openOverlay('#resetPwOverlay'); });
+  $('#resetEmailPreview').addEventListener('click', e => { if (e.target.id === 'resetEmailPreview') closeOverlay('#resetEmailPreview'); });
+
+  // RESET PASSWORD
+  $('#resetPwClose').addEventListener('click', () => closeOverlay('#resetPwOverlay'));
+  $('#resetPwForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const newPw = $('#resetPwNew').value;
+    const confirmPw = $('#resetPwConfirm').value;
+    if (newPw.length < 6) { toast('A senha deve ter pelo menos 6 caracteres', 'error'); return; }
+    if (newPw !== confirmPw) { toast('As senhas não coincidem', 'error'); return; }
+    const email = localStorage.getItem('nexus_reset_email');
+    const user = state.authUsers.find(u => u.email === email);
+    if (!user) { toast('Conta não encontrada', 'error'); return; }
+    const newHash = await crypto.hashPw(newPw);
+    if (newHash === user.password) { toast('A nova senha deve ser diferente da anterior', 'error'); return; }
+    user.password = newHash;
+    await saveUsers();
+    localStorage.removeItem('nexus_reset_email');
+    closeOverlay('#resetPwOverlay');
+    toast('Senha redefinida com sucesso! Faça login com sua nova senha.', 'success');
+    $('#forgotPwForm').style.display = '';
+    $('#forgotSent').style.display = 'none';
+  });
+
+  // TERMS & PRIVACY
+  $('#termsLink').addEventListener('click', e => { e.preventDefault(); openOverlay('#termsOverlay'); });
+  $('#termsClose').addEventListener('click', () => closeOverlay('#termsOverlay'));
+  $('#termsOverlay').addEventListener('click', e => { if (e.target.id === 'termsOverlay') closeOverlay('#termsOverlay'); });
+  $('#privacyLink').addEventListener('click', e => { e.preventDefault(); openOverlay('#privacyOverlay'); });
+  $('#privacyClose').addEventListener('click', () => closeOverlay('#privacyOverlay'));
+  $('#privacyOverlay').addEventListener('click', e => { if (e.target.id === 'privacyOverlay') closeOverlay('#privacyOverlay'); });
+
+  // DEMO
+  $('#authDemoBtn').addEventListener('click', () => { toast('Modo demonstração ativado', 'info'); showApp(true); });
+}
+
+function initDashboard() {
+  const banner = $('#weeklyResetBanner');
+  const bannerDismiss = $('#bannerDismiss');
+  if (banner && bannerDismiss) {
+    if (localStorage.getItem('nexus_banner_dismissed')) banner.classList.add('hidden');
+    bannerDismiss.addEventListener('click', () => { banner.classList.add('hidden'); localStorage.setItem('nexus_banner_dismissed', '1'); });
+  }
+  initParticles();
         updateClock();
         setInterval(updateClock, 1000);
         animateCounters();
@@ -1049,6 +1568,6 @@ function updateServerMetrics() {
   setInterval(addLogEntry, 8000);
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-    else init();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAuth);
+  else initAuth();
 })();
