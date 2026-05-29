@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>NexusAdmin — Painel de Gerenciamento</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2300d4ff'/%3E%3Cstop offset='100%25' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='6' fill='%230a0e1a'/%3E%3Cpath d='M18 4L10 18h5l-1 10 8-14h-5z' fill='url(%23g)'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
@@ -25,62 +25,61 @@
           <span class="logo-sub">Admin</span>
         </div>
       </div>
-      <p class="auth-tagline">Painel de Gerenciamento Inteligente</p>
+      <p class="auth-tagline" data-i18n="auth.tagline">Painel de Gerenciamento Inteligente</p>
     </div>
 
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login">Entrar</button>
-      <button class="auth-tab" data-tab="signup">Criar Conta</button>
+<button class="auth-tab active" data-tab="login" data-i18n="auth.login">Entrar</button>
+<button class="auth-tab" data-tab="signup" data-i18n="auth.signup">Criar Conta</button>
     </div>
 
     <!-- LOGIN FORM -->
     <form class="auth-form" id="loginForm" autocomplete="off">
       <div class="auth-field">
         <i class="fas fa-envelope"></i>
-        <input type="email" placeholder="Email" id="loginEmail" required>
+        <input type="email" placeholder="Email" id="loginEmail" data-i18n-placeholder="auth.email" required>
       </div>
       <div class="auth-field">
         <i class="fas fa-lock"></i>
-        <input type="password" placeholder="Senha" id="loginPassword" required>
+        <input type="password" placeholder="Senha" id="loginPassword" data-i18n-placeholder="auth.password" required>
         <button type="button" class="auth-toggle-pw" data-target="loginPassword" tabindex="-1"><i class="fas fa-eye"></i></button>
       </div>
       <div class="auth-options">
         <label class="custom-checkbox"><input type="checkbox" checked><span class="checkmark"></span></label>
-        <span>Lembrar de mim</span>
-        <a href="#" class="auth-forgot" id="forgotPwLink">Esqueceu a senha?</a>
+        <span data-i18n="auth.remember">Lembrar de mim</span>
+        <a href="#" class="auth-forgot" id="forgotPwLink" data-i18n="auth.forgot">Esqueceu a senha?</a>
       </div>
-      <button type="submit" class="auth-submit">Entrar</button>
-    </form>
+<button type="submit" class="auth-submit" data-i18n="auth.login">Entrar</button>
 
     <!-- SIGNUP FORM -->
     <form class="auth-form" id="signupForm" style="display:none" autocomplete="off">
       <div class="auth-field">
         <i class="fas fa-user"></i>
-        <input type="text" placeholder="Nome completo" id="signupName" required>
+        <input type="text" placeholder="Nome completo" id="signupName" data-i18n-placeholder="auth.name" required>
       </div>
       <div class="auth-field">
         <i class="fas fa-envelope"></i>
-        <input type="email" placeholder="Email" id="signupEmail" required>
+        <input type="email" placeholder="Email" id="signupEmail" data-i18n-placeholder="auth.email" required>
       </div>
       <div class="auth-field">
         <i class="fas fa-lock"></i>
-        <input type="password" placeholder="Criar senha" id="signupPassword" required>
+        <input type="password" placeholder="Criar senha" id="signupPassword" data-i18n-placeholder="auth.createPw" required>
         <button type="button" class="auth-toggle-pw" data-target="signupPassword" tabindex="-1"><i class="fas fa-eye"></i></button>
       </div>
       <div class="auth-field">
         <i class="fas fa-shield-halved"></i>
-        <input type="password" placeholder="Confirmar senha" id="signupConfirm" required>
+        <input type="password" placeholder="Confirmar senha" id="signupConfirm" data-i18n-placeholder="auth.confirmPw" required>
         <button type="button" class="auth-toggle-pw" data-target="signupConfirm" tabindex="-1"><i class="fas fa-eye"></i></button>
       </div>
       <div class="auth-strength" id="pwStrength">
         <div class="auth-strength-bar"><div class="auth-strength-fill" id="pwStrengthFill"></div></div>
-        <span class="auth-strength-label" id="pwStrengthLabel">Força da senha</span>
+        <span class="auth-strength-label" id="pwStrengthLabel" data-i18n="auth.pwStrength">Força da senha</span>
       </div>
-      <button type="submit" class="auth-submit">Criar Conta</button>
-      <p class="auth-terms">Ao criar uma conta, você concorda com os <a href="#" id="termsLink">Termos de Uso</a> e <a href="#" id="privacyLink">Política de Privacidade</a>.</p>
+<button type="submit" class="auth-submit" data-i18n="auth.signup">Criar Conta</button>
+<p class="auth-terms" data-i18n-html="auth.terms">Ao criar uma conta, você concorda com os <a href="#" id="termsLink">Termos de Uso</a> e <a href="#" id="privacyLink">Política de Privacidade</a>.</p>
     </form>
 
-    <button class="auth-demo-btn" id="authDemoBtn" type="button"><i class="fas fa-play-circle"></i> Demonstração</button>
+    <button class="auth-demo-btn" id="authDemoBtn" type="button"><i class="fas fa-play-circle"></i> <span data-i18n="auth.demo">Demonstração</span></button>
   </div>
 </div>
 
@@ -295,71 +294,70 @@
 
             <nav class="sidebar-nav">
                 <div class="nav-section">
-                    <span class="nav-section-title">PRINCIPAL</span>
-                    <a href="#" class="nav-item active" data-page="dashboard">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
+                    <span class="nav-section-title" data-i18n="nav.principal">PRINCIPAL</span>
+<a href="#" class="nav-item active" data-page="dashboard">
+<i class="fas fa-th-large"></i>
+<span data-i18n="nav.dashboard">Dashboard</span>
+                    </a>
+<a href="#" class="nav-item" data-page="analytics">
+<i class="fas fa-chart-line"></i>
+<span data-i18n="nav.analytics">Analytics</span>
                         <div class="nav-glow"></div>
                     </a>
-                    <a href="#" class="nav-item" data-page="analytics">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Analytics</span>
-                        <div class="nav-glow"></div>
-                    </a>
-                    <a href="#" class="nav-item" data-page="usuarios" id="navUsuarios">
-                        <i class="fas fa-users"></i>
-                        <span>Usuários</span>
+<a href="#" class="nav-item" data-page="usuarios" id="navUsuarios">
+<i class="fas fa-users"></i>
+<span data-i18n="nav.usuarios">Usuários</span>
                         <span class="nav-badge" id="badgeUsers">8</span>
                         <div class="nav-glow"></div>
                     </a>
-                    <a href="#" class="nav-item" data-page="transacoes">
-                        <i class="fas fa-money-bill-transfer"></i>
-                        <span>Transações</span>
+<a href="#" class="nav-item" data-page="transacoes">
+<i class="fas fa-money-bill-transfer"></i>
+<span data-i18n="nav.transacoes">Transações</span>
                         <div class="nav-glow"></div>
                     </a>
                 </div>
 
                 <div class="nav-section">
-                    <span class="nav-section-title">GERENCIAMENTO</span>
-                    <a href="#" class="nav-item" data-page="projetos">
-                        <i class="fas fa-folder-open"></i>
-                        <span>Projetos</span>
+                    <span class="nav-section-title" data-i18n="nav.gerenciamento">GERENCIAMENTO</span>
+<a href="#" class="nav-item" data-page="projetos">
+<i class="fas fa-folder-open"></i>
+<span data-i18n="nav.projetos">Projetos</span>
                         <span class="nav-badge green" id="badgeProjects">6</span>
                         <div class="nav-glow"></div>
                     </a>
-                    <a href="#" class="nav-item" data-page="tarefas">
-                        <i class="fas fa-list-check"></i>
-                        <span>Tarefas</span>
+<a href="#" class="nav-item" data-page="tarefas">
+<i class="fas fa-list-check"></i>
+<span data-i18n="nav.tarefas">Tarefas</span>
                         <span class="nav-badge orange" id="badgeTasks">3</span>
                         <div class="nav-glow"></div>
                     </a>
-                    <a href="#" class="nav-item" data-page="equipe">
-                        <i class="fas fa-people-group"></i>
-                        <span>Equipe</span>
+<a href="#" class="nav-item" data-page="equipe">
+<i class="fas fa-people-group"></i>
+<span data-i18n="nav.equipe">Equipe</span>
                         <div class="nav-glow"></div>
                     </a>
-                    <a href="#" class="nav-item" data-page="calendario">
-                        <i class="fas fa-calendar-days"></i>
-                        <span>Calendário</span>
+<a href="#" class="nav-item" data-page="calendario">
+<i class="fas fa-calendar-days"></i>
+<span data-i18n="nav.calendario">Calendário</span>
                         <div class="nav-glow"></div>
                     </a>
                 </div>
 
                 <div class="nav-section">
-                    <span class="nav-section-title">SISTEMA</span>
-                    <a href="#" class="nav-item" data-page="config">
-                        <i class="fas fa-gear"></i>
-                        <span>Configurações</span>
+                    <span class="nav-section-title" data-i18n="nav.sistema">SISTEMA</span>
+<a href="#" class="nav-item" data-page="config">
+<i class="fas fa-gear"></i>
+<span data-i18n="nav.config">Configurações</span>
                         <div class="nav-glow"></div>
                     </a>
-                    <a href="#" class="nav-item" data-page="seguranca">
-                        <i class="fas fa-shield-halved"></i>
-                        <span>Segurança</span>
+<a href="#" class="nav-item" data-page="seguranca">
+<i class="fas fa-shield-halved"></i>
+<span data-i18n="nav.seguranca">Segurança</span>
                         <div class="nav-glow"></div>
                     </a>
-                    <a href="#" class="nav-item" data-page="logs">
-                        <i class="fas fa-terminal"></i>
-                        <span>Logs</span>
+<a href="#" class="nav-item" data-page="logs">
+<i class="fas fa-terminal"></i>
+<span data-i18n="nav.logs">Logs</span>
                         <div class="nav-glow"></div>
                     </a>
                 </div>
@@ -380,10 +378,10 @@
                     </button>
                 </div>
                 <div class="user-dropdown" id="userDropdown">
-                    <a href="#" class="dropdown-item" data-action="profile"><i class="fas fa-user"></i> Meu Perfil</a>
-                    <a href="#" class="dropdown-item" data-action="settings"><i class="fas fa-gear"></i> Configurações</a>
+                    <a href="#" class="dropdown-item" data-action="profile"><i class="fas fa-user"></i> <span data-i18n="user.profile">Meu Perfil</span></a>
+                    <a href="#" class="dropdown-item" data-action="settings"><i class="fas fa-gear"></i> <span data-i18n="user.settings">Configurações</span></a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item danger" data-action="logout"><i class="fas fa-right-from-bracket"></i> Sair</a>
+                    <a href="#" class="dropdown-item danger" data-action="logout"><i class="fas fa-right-from-bracket"></i> <span data-i18n="user.logout">Sair</span></a>
                 </div>
             </div>
         </aside>
@@ -391,7 +389,7 @@
 <main class="main-content">
   <div class="weekly-reset-banner" id="weeklyResetBanner">
     <i class="fas fa-clock-rotate-left"></i>
-    <span>Os dados são redefinidos automaticamente a cada <strong>7 dias</strong> para manter a demonstração limpa.</span>
+    <span data-i18n-html="banner.text">Os dados são redefinidos automaticamente a cada <strong>7 dias</strong> para manter a demonstração limpa.</span>
     <button class="banner-dismiss" id="bannerDismiss"><i class="fas fa-xmark"></i></button>
   </div>
   <header class="top-bar">
@@ -401,7 +399,7 @@
                     </button>
                     <div class="search-bar" id="searchBar">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Buscar qualquer coisa..." id="globalSearch">
+                        <input type="text" placeholder="Buscar qualquer coisa..." data-i18n-placeholder="search.placeholder" id="globalSearch">
                         <kbd>Ctrl+K</kbd>
                     </div>
                 </div>
@@ -434,8 +432,8 @@
                 <div class="page active" id="page-dashboard">
                     <div class="page-header">
                         <div>
-                            <h1 class="page-title">Dashboard</h1>
-                            <p class="page-subtitle">Visão geral do sistema em tempo real</p>
+                            <h1 class="page-title" data-i18n="nav.dashboard">Dashboard</h1>
+                            <p class="page-subtitle" data-i18n="dash.subtitle">Visão geral do sistema em tempo real</p>
                         </div>
                         <div class="page-actions">
                             <select class="period-select" id="periodSelect">
@@ -445,7 +443,7 @@
                                 <option value="1y">Último ano</option>
                             </select>
                             <button class="btn btn-primary" id="exportBtn">
-                                <i class="fas fa-download"></i> Exportar
+<i class="fas fa-download"></i> <span data-i18n="dash.export">Exportar</span>
                             </button>
                         </div>
                     </div>
@@ -456,7 +454,7 @@
 <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
 </div>
 <div class="stat-content">
-<span class="stat-label">Receita Total</span>
+<span class="stat-label" data-i18n="dash.receita">Receita Total</span>
 <div class="stat-value-row">
 <span class="stat-value" id="dashReceita" data-counter="284590">R$ 0</span>
 <span class="stat-change positive" id="dashReceitaChange"><i class="fas fa-arrow-up"></i> 23.5%</span>
@@ -470,7 +468,7 @@
 <div class="stat-icon"><i class="fas fa-users"></i></div>
 </div>
 <div class="stat-content">
-<span class="stat-label">Usuários Ativos</span>
+<span class="stat-label" data-i18n="dash.usuarios">Usuários Ativos</span>
 <div class="stat-value-row">
 <span class="stat-value" id="dashUsuarios" data-counter="8432">0</span>
 <span class="stat-change positive" id="dashUsuariosChange"><i class="fas fa-arrow-up"></i> 12.8%</span>
@@ -484,7 +482,7 @@
 <div class="stat-icon"><i class="fas fa-cart-shopping"></i></div>
 </div>
 <div class="stat-content">
-<span class="stat-label">Pedidos</span>
+<span class="stat-label" data-i18n="dash.pedidos">Pedidos</span>
 <div class="stat-value-row">
 <span class="stat-value" id="dashPedidos" data-counter="1924">0</span>
 <span class="stat-change negative" id="dashPedidosChange"><i class="fas fa-arrow-down"></i> 3.2%</span>
@@ -498,7 +496,7 @@
 <div class="stat-icon"><i class="fas fa-percent"></i></div>
 </div>
 <div class="stat-content">
-<span class="stat-label">Taxa de Conversão</span>
+<span class="stat-label" data-i18n="dash.conversao">Taxa de Conversão</span>
 <div class="stat-value-row">
 <span class="stat-value" id="dashConversao" data-counter="68" data-suffix=".7%">0%</span>
 <span class="stat-change positive" id="dashConversaoChange"><i class="fas fa-arrow-up"></i> 5.1%</span>
@@ -512,7 +510,7 @@
                     <div class="charts-grid">
                         <div class="card chart-card main-chart">
                             <div class="card-header">
-                                <h3>Receita & Despesas</h3>
+                                <h3 data-i18n="dash.receitaChart">Receita & Despesas</h3>
                                 <div class="chart-legend">
                                     <span class="legend-item"><span class="legend-dot" style="background:#00d4ff"></span> Receita</span>
                                     <span class="legend-item"><span class="legend-dot" style="background:#a855f7"></span> Despesas</span>
@@ -524,7 +522,7 @@
                         </div>
                         <div class="card chart-card side-chart">
                             <div class="card-header">
-                                <h3>Tráfego por Fonte</h3>
+                                <h3 data-i18n="dash.trafficChart">Tráfego por Fonte</h3>
                             </div>
                             <div class="card-body doughnut-container">
                                 <canvas id="trafficChart"></canvas>
@@ -539,8 +537,8 @@
                     <div class="bottom-grid">
                         <div class="card table-card">
                             <div class="card-header">
-                                <h3>Transações Recentes</h3>
-                                <button class="btn btn-ghost" id="viewAllTransBtn">Ver Todas <i class="fas fa-arrow-right"></i></button>
+                                <h3 data-i18n="dash.recentTrans">Transações Recentes</h3>
+                                <button class="btn btn-ghost" id="viewAllTransBtn" data-i18n="dash.viewAll">Ver Todas <i class="fas fa-arrow-right"></i></button>
                             </div>
 <div class="card-body">
 <div class="bulk-action-bar" id="bulkActionBar">
@@ -601,8 +599,8 @@
 
                         <div class="card activity-card">
                             <div class="card-header">
-                                <h3>Atividade Recente</h3>
-                                <button class="btn btn-ghost" id="filterActivityBtn">Filtrar</button>
+                                <h3 data-i18n="dash.recentActivity">Atividade Recente</h3>
+                                <button class="btn btn-ghost" id="filterActivityBtn" data-i18n="dash.filter">Filtrar</button>
                             </div>
                             <div class="card-body">
                                 <div class="activity-timeline" id="activityTimeline">
@@ -689,36 +687,36 @@
                 <div class="page" id="page-analytics">
                     <div class="page-header">
                         <div>
-                            <h1 class="page-title">Analytics</h1>
-                            <p class="page-subtitle">Métricas detalhadas e insights</p>
+<h1 class="page-title" data-i18n="nav.analytics">Analytics</h1>
+<p class="page-subtitle" data-i18n="an.subtitle">Métricas detalhadas e insights</p>
                         </div>
                     </div>
                     <div class="charts-grid full-width">
                         <div class="card chart-card">
-                            <div class="card-header"><h3>Visitantes por Hora</h3></div>
+                            <div class="card-header"><h3 data-i18n="an.visitorsByHour">Visitantes por Hora</h3></div>
                             <div class="card-body chart-body"><canvas id="visitorsChart"></canvas></div>
                         </div>
                     </div>
 <div class="stats-grid" style="margin-top:1.5rem">
-<div class="stat-card" data-color="cyan"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-eye"></i></div></div><div class="stat-content"><span class="stat-label">Pageviews</span><div class="stat-value-row"><span class="stat-value" id="anPageviews">142.8K</span><span class="stat-change positive" id="anPageviewsChange"><i class="fas fa-arrow-up"></i> 18%</span></div></div></div>
-<div class="stat-card" data-color="purple"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-content"><span class="stat-label">Tempo Médio</span><div class="stat-value-row"><span class="stat-value" id="anTempoMedio">4m 32s</span><span class="stat-change positive" id="anTempoMedioChange"><i class="fas fa-arrow-up"></i> 8%</span></div></div></div>
-<div class="stat-card" data-color="green"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-arrow-right-from-bracket"></i></div></div><div class="stat-content"><span class="stat-label">Bounce Rate</span><div class="stat-value-row"><span class="stat-value" id="anBounce">32.4%</span><span class="stat-change negative" id="anBounceChange"><i class="fas fa-arrow-down"></i> 2.1%</span></div></div></div>
-<div class="stat-card" data-color="orange"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-rotate"></i></div></div><div class="stat-content"><span class="stat-label">Retenção</span><div class="stat-value-row"><span class="stat-value" id="anRetencao">67.2%</span><span class="stat-change positive" id="anRetencaoChange"><i class="fas fa-arrow-up"></i> 5%</span></div></div></div>
+<div class="stat-card" data-color="cyan"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-eye"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="an.pageviews">Pageviews</span><div class="stat-value-row"><span class="stat-value" id="anPageviews">142.8K</span><span class="stat-change positive" id="anPageviewsChange"><i class="fas fa-arrow-up"></i> 18%</span></div></div></div>
+<div class="stat-card" data-color="purple"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="an.avgTime">Tempo Médio</span><div class="stat-value-row"><span class="stat-value" id="anTempoMedio">4m 32s</span><span class="stat-change positive" id="anTempoMedioChange"><i class="fas fa-arrow-up"></i> 8%</span></div></div></div>
+<div class="stat-card" data-color="green"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-arrow-right-from-bracket"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="an.bounce">Bounce Rate</span><div class="stat-value-row"><span class="stat-value" id="anBounce">32.4%</span><span class="stat-change negative" id="anBounceChange"><i class="fas fa-arrow-down"></i> 2.1%</span></div></div></div>
+<div class="stat-card" data-color="orange"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-rotate"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="an.retention">Retenção</span><div class="stat-value-row"><span class="stat-value" id="anRetencao">67.2%</span><span class="stat-change positive" id="anRetencaoChange"><i class="fas fa-arrow-up"></i> 5%</span></div></div></div>
 </div>
                 </div>
 
                 <!-- USUARIOS PAGE -->
                 <div class="page" id="page-usuarios">
                     <div class="page-header">
-                        <div><h1 class="page-title">Usuários</h1><p class="page-subtitle">Gerenciamento de usuários do sistema</p></div>
+                        <div><h1 class="page-title" data-i18n="users.title">Usuários</h1><p class="page-subtitle" data-i18n="users.subtitle">Gerenciamento de usuários do sistema</p></div>
                         <div class="page-actions">
-                            <button class="btn btn-primary" id="newUserBtn"><i class="fas fa-plus"></i> Novo Usuário</button>
+                            <button class="btn btn-primary" id="newUserBtn"><i class="fas fa-plus"></i> <span data-i18n="users.newUser">Novo Usuário</span></button>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-header">
                             <div class="table-filters">
-                                <div class="search-bar small"><i class="fas fa-search"></i><input type="text" placeholder="Buscar usuário..." id="userSearchInput"></div>
+                                <div class="search-bar small"><i class="fas fa-search"></i><input type="text" placeholder="Buscar usuário..." data-i18n-placeholder="users.search" id="userSearchInput"></div>
                                 <select class="period-select" id="userFilterSelect">
                                     <option value="all">Todos</option>
                                     <option value="active">Ativos</option>
@@ -739,7 +737,7 @@
                 <!-- TRANSACOES PAGE -->
 <div class="page" id="page-transacoes">
 <div class="page-header">
-<div><h1 class="page-title">Transações</h1><p class="page-subtitle">Histórico completo de transações</p></div>
+<div><h1 class="page-title" data-i18n="trans.title">Transações</h1><p class="page-subtitle" data-i18n="trans.subtitle">Histórico completo de transações</p></div>
 <div class="page-actions">
 <select class="period-select" id="transPeriodSelect">
 <option value="7d">Últimos 7 dias</option>
@@ -747,14 +745,14 @@
 <option value="90d">Últimos 90 dias</option>
 <option value="1y">Último ano</option>
 </select>
-<button class="btn btn-primary" id="newTransBtn"><i class="fas fa-plus"></i> Nova Transação</button>
+<button class="btn btn-primary" id="newTransBtn"><i class="fas fa-plus"></i> <span data-i18n="trans.new">Nova Transação</span></button>
 </div>
 </div>
 <div class="stats-grid">
-<div class="stat-card" data-color="cyan"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-receipt"></i></div></div><div class="stat-content"><span class="stat-label">Total</span><div class="stat-value-row"><span class="stat-value" id="transTotal">1,247</span></div></div></div>
-<div class="stat-card" data-color="green"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div><div class="stat-content"><span class="stat-label">Concluídas</span><div class="stat-value-row"><span class="stat-value" id="transConcluidas">1,089</span></div></div></div>
-<div class="stat-card" data-color="orange"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-content"><span class="stat-label">Pendentes</span><div class="stat-value-row"><span class="stat-value" id="transPendentes">112</span></div></div></div>
-<div class="stat-card" data-color="red"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-xmark"></i></div></div><div class="stat-content"><span class="stat-label">Canceladas</span><div class="stat-value-row"><span class="stat-value" id="transCanceladas">46</span></div></div></div>
+<div class="stat-card" data-color="cyan"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-receipt"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="trans.total">Total</span><div class="stat-value-row"><span class="stat-value" id="transTotal">1,247</span></div></div></div>
+<div class="stat-card" data-color="green"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="trans.completed">Concluídas</span><div class="stat-value-row"><span class="stat-value" id="transConcluidas">1,089</span></div></div></div>
+<div class="stat-card" data-color="orange"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="trans.pending">Pendentes</span><div class="stat-value-row"><span class="stat-value" id="transPendentes">112</span></div></div></div>
+<div class="stat-card" data-color="red"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-xmark"></i></div></div><div class="stat-content"><span class="stat-label" data-i18n="trans.cancelled">Canceladas</span><div class="stat-value-row"><span class="stat-value" id="transCanceladas">46</span></div></div></div>
 </div>
                     <div class="card">
                         <div class="card-header">
@@ -775,9 +773,9 @@
                 <!-- PROJETOS PAGE -->
                 <div class="page" id="page-projetos">
                     <div class="page-header">
-                        <div><h1 class="page-title">Projetos</h1><p class="page-subtitle">Acompanhe o andamento dos projetos</p></div>
-                        <div class="page-actions">
-                            <button class="btn btn-primary" id="newProjectBtn"><i class="fas fa-plus"></i> Novo Projeto</button>
+<div><h1 class="page-title" data-i18n="proj.title">Projetos</h1><p class="page-subtitle" data-i18n="proj.subtitle">Acompanhe o andamento dos projetos</p></div>
+<div class="page-actions">
+<button class="btn btn-primary" id="newProjectBtn"><i class="fas fa-plus"></i> <span data-i18n="proj.new">Novo Projeto</span></button>
                         </div>
                     </div>
                     <div class="projects-grid" id="projectsGrid"></div>
@@ -786,26 +784,26 @@
                 <!-- TAREFAS PAGE -->
                 <div class="page" id="page-tarefas">
                     <div class="page-header">
-                        <div><h1 class="page-title">Tarefas</h1><p class="page-subtitle">Gerencie suas tarefas e atividades</p></div>
-                        <div class="page-actions">
-                            <button class="btn btn-primary" id="newTaskBtn"><i class="fas fa-plus"></i> Nova Tarefa</button>
+<div><h1 class="page-title" data-i18n="tasks.title">Tarefas</h1><p class="page-subtitle" data-i18n="tasks.subtitle">Gerencie suas tarefas e atividades</p></div>
+<div class="page-actions">
+<button class="btn btn-primary" id="newTaskBtn"><i class="fas fa-plus"></i> <span data-i18n="tasks.new">Nova Tarefa</span></button>
                         </div>
                     </div>
                     <div class="kanban-board" id="kanbanBoard">
                         <div class="kanban-column" data-status="todo">
-                            <div class="kanban-header"><span class="kanban-dot gray"></span><h3>A Fazer</h3><span class="kanban-count" id="todoCount">0</span></div>
+                            <div class="kanban-header"><span class="kanban-dot gray"></span><h3 data-i18n="tasks.todo">A Fazer</h3><span class="kanban-count" id="todoCount">0</span></div>
                             <div class="kanban-list" id="kanbanTodo"></div>
                         </div>
                         <div class="kanban-column" data-status="progress">
-                            <div class="kanban-header"><span class="kanban-dot blue"></span><h3>Em Progresso</h3><span class="kanban-count" id="progressCount">0</span></div>
+                            <div class="kanban-header"><span class="kanban-dot blue"></span><h3 data-i18n="tasks.progress">Em Progresso</h3><span class="kanban-count" id="progressCount">0</span></div>
                             <div class="kanban-list" id="kanbanProgress"></div>
                         </div>
                         <div class="kanban-column" data-status="review">
-                            <div class="kanban-header"><span class="kanban-dot orange"></span><h3>Revisão</h3><span class="kanban-count" id="reviewCount">0</span></div>
+                            <div class="kanban-header"><span class="kanban-dot orange"></span><h3 data-i18n="tasks.review">Revisão</h3><span class="kanban-count" id="reviewCount">0</span></div>
                             <div class="kanban-list" id="kanbanReview"></div>
                         </div>
                         <div class="kanban-column" data-status="done">
-                            <div class="kanban-header"><span class="kanban-dot green"></span><h3>Concluído</h3><span class="kanban-count" id="doneCount">0</span></div>
+                            <div class="kanban-header"><span class="kanban-dot green"></span><h3 data-i18n="tasks.done">Concluído</h3><span class="kanban-count" id="doneCount">0</span></div>
                             <div class="kanban-list" id="kanbanDone"></div>
                         </div>
                     </div>
@@ -814,9 +812,9 @@
                 <!-- EQUIPE PAGE -->
                 <div class="page" id="page-equipe">
                     <div class="page-header">
-                        <div><h1 class="page-title">Equipe</h1><p class="page-subtitle">Gerenciamento de equipes</p></div>
-                        <div class="page-actions">
-                            <button class="btn btn-primary" id="newMemberBtn"><i class="fas fa-plus"></i> Novo Membro</button>
+<div><h1 class="page-title" data-i18n="team.title">Equipe</h1><p class="page-subtitle" data-i18n="team.subtitle">Gerenciamento de equipes</p></div>
+<div class="page-actions">
+<button class="btn btn-primary" id="newMemberBtn"><i class="fas fa-plus"></i> <span data-i18n="team.newMember">Novo Membro</span></button>
                         </div>
                     </div>
                     <div class="team-grid" id="teamGrid"></div>
@@ -825,9 +823,9 @@
                 <!-- CALENDARIO PAGE -->
                 <div class="page" id="page-calendario">
                     <div class="page-header">
-                        <div><h1 class="page-title">Calendário</h1><p class="page-subtitle">Agenda e eventos</p></div>
-                        <div class="page-actions">
-                            <button class="btn btn-primary" id="newEventBtn"><i class="fas fa-plus"></i> Novo Evento</button>
+<div><h1 class="page-title" data-i18n="cal.title">Calendário</h1><p class="page-subtitle" data-i18n="cal.subtitle">Agenda e eventos</p></div>
+<div class="page-actions">
+<button class="btn btn-primary" id="newEventBtn"><i class="fas fa-plus"></i> <span data-i18n="cal.newEvent">Novo Evento</span></button>
                         </div>
                     </div>
                     <div class="calendar-container">
@@ -844,7 +842,7 @@
                             </div>
                         </div>
                         <div class="card">
-                            <div class="card-header"><h3>Próximos Eventos</h3></div>
+                            <div class="card-header"><h3 data-i18n="cal.upcoming">Próximos Eventos</h3></div>
                             <div class="card-body">
                                 <div class="events-list" id="eventsList"></div>
                             </div>
@@ -855,36 +853,36 @@
                 <!-- CONFIG PAGE -->
                 <div class="page" id="page-config">
                     <div class="page-header">
-                        <div><h1 class="page-title">Configurações</h1><p class="page-subtitle">Personalize o sistema</p></div>
+                        <div><h1 class="page-title" data-i18n="config.title">Configurações</h1><p class="page-subtitle" data-i18n="config.subtitle">Personalize o sistema</p></div>
                     </div>
                     <div class="config-grid">
                         <div class="card">
-                            <div class="card-header"><h3>Perfil</h3></div>
+                            <div class="card-header"><h3 data-i18n="config.profile">Perfil</h3></div>
                             <div class="card-body">
-                                <div class="form-group"><label>Nome</label><input type="text" class="form-input" value="Admin Nexus" id="configName"></div>
-                                <div class="form-group"><label>Email</label><input type="email" class="form-input" value="admin@nexus.io" id="configEmail"></div>
-                                <div class="form-group"><label>Idioma</label><select class="form-input" id="configLang"><option>Português (BR)</option><option>English</option><option>Español</option></select></div>
-                                <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="saveProfileBtn">Salvar Alterações</button>
+                                <div class="form-group"><label data-i18n="config.name">Nome</label><input type="text" class="form-input" value="Admin Nexus" id="configName"></div>
+                                <div class="form-group"><label data-i18n="config.emailLabel">Email</label><input type="email" class="form-input" value="admin@nexus.io" id="configEmail"></div>
+                                <div class="form-group"><label data-i18n="config.language">Idioma</label><select class="form-input" id="configLang"><option>Português (BR)</option><option>English</option><option>Español</option></select></div>
+                                <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="saveProfileBtn" data-i18n="config.save">Salvar Alterações</button>
                             </div>
                         </div>
                         <div class="card">
-                            <div class="card-header"><h3>Notificações</h3></div>
+                            <div class="card-header"><h3 data-i18n="config.notifications">Notificações</h3></div>
                             <div class="card-body">
                                 <div class="toggle-group">
-                                    <div class="toggle-item"><span>Email Notifications</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
-                                    <div class="toggle-item"><span>Push Notifications</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
-                                    <div class="toggle-item"><span>Security Alerts</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
-                                    <div class="toggle-item"><span>Weekly Report</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span data-i18n="config.emailNotif">Email Notifications</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span data-i18n="config.pushNotif">Push Notifications</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span data-i18n="config.securityAlerts">Security Alerts</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span data-i18n="config.weeklyReport">Weekly Report</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
                                 </div>
                             </div>
                         </div>
 <div class="card">
-<div class="card-header"><h3>Aparência</h3></div>
+<div class="card-header"><h3 data-i18n="config.appearance">Aparência</h3></div>
 <div class="card-body">
 <div class="theme-selector">
-<div class="theme-option active" data-theme="dark"><div class="theme-preview dark-preview"></div><span>Escuro</span></div>
-<div class="theme-option" data-theme="light"><div class="theme-preview light-preview"></div><span>Claro</span></div>
-<div class="theme-option" data-theme="auto"><div class="theme-preview auto-preview"></div><span>Auto</span></div>
+<div class="theme-option active" data-theme="dark"><div class="theme-preview dark-preview"></div><span data-i18n="config.dark">Escuro</span></div>
+<div class="theme-option" data-theme="light"><div class="theme-preview light-preview"></div><span data-i18n="config.light">Claro</span></div>
+<div class="theme-option" data-theme="auto"><div class="theme-preview auto-preview"></div><span data-i18n="config.auto">Auto</span></div>
 </div>
 </div>
 </div>
@@ -894,11 +892,11 @@
                 <!-- SEGURANCA PAGE -->
                 <div class="page" id="page-seguranca">
                     <div class="page-header">
-                        <div><h1 class="page-title">Segurança</h1><p class="page-subtitle">Configurações de segurança do sistema</p></div>
+                        <div><h1 class="page-title" data-i18n="sec.title">Segurança</h1><p class="page-subtitle" data-i18n="sec.subtitle">Configurações de segurança do sistema</p></div>
                     </div>
                     <div class="config-grid">
                         <div class="card">
-                            <div class="card-header"><h3>Autenticação</h3></div>
+                            <div class="card-header"><h3 data-i18n="sec.auth">Autenticação</h3></div>
                             <div class="card-body">
                                 <div class="toggle-group">
                                     <div class="toggle-item"><span>Autenticação 2FA</span><label class="toggle-switch"><input type="checkbox" id="toggle2FA"><span class="toggle-slider"></span></label></div>
