@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusAdmin — Painel de Gerenciamento</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2300d4ff'/%3E%3Cstop offset='100%25' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='6' fill='%230a0e1a'/%3E%3Cpath d='M18 4L10 18h5l-1 10 8-14h-5z' fill='url(%23g)'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-name">Nexus</span>
+                        <span class="logo-sub">Admin</span>
+                    </div>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <span class="nav-section-title">PRINCIPAL</span>
+                    <a href="#" class="nav-item active" data-page="dashboard">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="analytics">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="usuarios">
+                        <i class="fas fa-users"></i>
+                        <span>Usuários</span>
+                        <span class="nav-badge" id="badgeUsers">8</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="transacoes">
+                        <i class="fas fa-money-bill-transfer"></i>
+                        <span>Transações</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">GERENCIAMENTO</span>
+                    <a href="#" class="nav-item" data-page="projetos">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Projetos</span>
+                        <span class="nav-badge green" id="badgeProjects">6</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="tarefas">
+                        <i class="fas fa-list-check"></i>
+                        <span>Tarefas</span>
+                        <span class="nav-badge orange" id="badgeTasks">3</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="equipe">
+                        <i class="fas fa-people-group"></i>
+                        <span>Equipe</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="calendario">
+                        <i class="fas fa-calendar-days"></i>
+                        <span>Calendário</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">SISTEMA</span>
+                    <a href="#" class="nav-item" data-page="config">
+                        <i class="fas fa-gear"></i>
+                        <span>Configurações</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="seguranca">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>Segurança</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                    <a href="#" class="nav-item" data-page="logs">
+                        <i class="fas fa-terminal"></i>
+                        <span>Logs</span>
+                        <div class="nav-glow"></div>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Avatar">
+                        <div class="avatar-status online"></div>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">Admin Nexus</span>
+                        <span class="user-role">Super Admin</span>
+                    </div>
+                    <button class="user-menu-btn" id="userMenuBtn">
+                        <i class="fas fa-ellipsis-vertical"></i>
+                    </button>
+                </div>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="#" class="dropdown-item" data-action="profile"><i class="fas fa-user"></i> Meu Perfil</a>
+                    <a href="#" class="dropdown-item" data-action="settings"><i class="fas fa-gear"></i> Configurações</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item danger" data-action="logout"><i class="fas fa-right-from-bracket"></i> Sair</a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="search-bar" id="searchBar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Buscar qualquer coisa..." id="globalSearch">
+                        <kbd>Ctrl+K</kbd>
+                    </div>
+                </div>
+                <div class="top-bar-right">
+                    <div class="header-actions">
+                        <button class="action-btn" id="themeToggle" title="Alternar tema">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button class="action-btn notification-btn" id="notifBtn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notif-count" id="notifCount">7</span>
+                        </button>
+                        <button class="action-btn" id="messageBtn">
+                            <i class="fas fa-message"></i>
+                            <span class="notif-count">3</span>
+                        </button>
+                        <button class="action-btn" id="fullscreenBtn" title="Tela cheia">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                    <div class="header-datetime">
+                        <span class="header-time" id="headerTime">00:00</span>
+                        <span class="header-date" id="headerDate">--</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper" id="contentWrapper">
+                <!-- DASHBOARD PAGE -->
+                <div class="page active" id="page-dashboard">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Dashboard</h1>
+                            <p class="page-subtitle">Visão geral do sistema em tempo real</p>
+                        </div>
+                        <div class="page-actions">
+                            <select class="period-select" id="periodSelect">
+                                <option value="7d">Últimos 7 dias</option>
+                                <option value="30d" selected>Últimos 30 dias</option>
+                                <option value="90d">Últimos 90 dias</option>
+                                <option value="1y">Último ano</option>
+                            </select>
+                            <button class="btn btn-primary" id="exportBtn">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card" data-color="cyan">
+                            <div class="stat-icon-wrapper">
+                                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Receita Total</span>
+                                <div class="stat-value-row">
+                                    <span class="stat-value" data-counter="284590">R$ 0</span>
+                                    <span class="stat-change positive"><i class="fas fa-arrow-up"></i> 23.5%</span>
+                                </div>
+                                <div class="stat-sparkline" id="spark1"></div>
+                            </div>
+                            <div class="stat-glow"></div>
+                        </div>
+                        <div class="stat-card" data-color="purple">
+                            <div class="stat-icon-wrapper">
+                                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Usuários Ativos</span>
+                                <div class="stat-value-row">
+                                    <span class="stat-value" data-counter="8432">0</span>
+                                    <span class="stat-change positive"><i class="fas fa-arrow-up"></i> 12.8%</span>
+                                </div>
+                                <div class="stat-sparkline" id="spark2"></div>
+                            </div>
+                            <div class="stat-glow"></div>
+                        </div>
+                        <div class="stat-card" data-color="green">
+                            <div class="stat-icon-wrapper">
+                                <div class="stat-icon"><i class="fas fa-cart-shopping"></i></div>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Pedidos</span>
+                                <div class="stat-value-row">
+                                    <span class="stat-value" data-counter="1924">0</span>
+                                    <span class="stat-change negative"><i class="fas fa-arrow-down"></i> 3.2%</span>
+                                </div>
+                                <div class="stat-sparkline" id="spark3"></div>
+                            </div>
+                            <div class="stat-glow"></div>
+                        </div>
+                        <div class="stat-card" data-color="orange">
+                            <div class="stat-icon-wrapper">
+                                <div class="stat-icon"><i class="fas fa-percent"></i></div>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Taxa de Conversão</span>
+                                <div class="stat-value-row">
+                                    <span class="stat-value" data-counter="68" data-suffix=".7%">0%</span>
+                                    <span class="stat-change positive"><i class="fas fa-arrow-up"></i> 5.1%</span>
+                                </div>
+                                <div class="stat-sparkline" id="spark4"></div>
+                            </div>
+                            <div class="stat-glow"></div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="card chart-card main-chart">
+                            <div class="card-header">
+                                <h3>Receita & Despesas</h3>
+                                <div class="chart-legend">
+                                    <span class="legend-item"><span class="legend-dot" style="background:#00d4ff"></span> Receita</span>
+                                    <span class="legend-item"><span class="legend-dot" style="background:#a855f7"></span> Despesas</span>
+                                </div>
+                            </div>
+                            <div class="card-body chart-body">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card side-chart">
+                            <div class="card-header">
+                                <h3>Tráfego por Fonte</h3>
+                            </div>
+                            <div class="card-body doughnut-container">
+                                <canvas id="trafficChart"></canvas>
+                                <div class="doughnut-center">
+                                    <span class="doughnut-value">24.8K</span>
+                                    <span class="doughnut-label">Total</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-grid">
+                        <div class="card table-card">
+                            <div class="card-header">
+                                <h3>Transações Recentes</h3>
+                                <button class="btn btn-ghost" id="viewAllTransBtn">Ver Todas <i class="fas fa-arrow-right"></i></button>
+                            </div>
+<div class="card-body">
+<div class="bulk-action-bar" id="bulkActionBar">
+  <span id="bulkCount">0 selecionados</span>
+  <button class="btn btn-ghost" id="bulkToggleBtn"><i class="fas fa-toggle-on"></i> Alternar Status</button>
+  <button class="btn btn-danger btn-sm" id="bulkDeleteBtn"><i class="fas fa-trash"></i> Remover</button>
+</div>
+<table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Tipo</th>
+                                            <th>Valor</th>
+                                            <th>Status</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><div class="table-user"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" alt=""><span>Ana Silva</span></div></td>
+                                            <td>Assinatura</td>
+                                            <td class="text-highlight">R$ 1.299,00</td>
+                                            <td><span class="status-badge success">Concluído</span></td>
+                                            <td>28 Mai 2026</td>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="table-user"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos" alt=""><span>Carlos Mendes</span></div></td>
+                                            <td>Compra</td>
+                                            <td class="text-highlight">R$ 849,90</td>
+                                            <td><span class="status-badge warning">Pendente</span></td>
+                                            <td>27 Mai 2026</td>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="table-user"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Julia" alt=""><span>Júlia Ferreira</span></div></td>
+                                            <td>Renovação</td>
+                                            <td class="text-highlight">R$ 2.450,00</td>
+                                            <td><span class="status-badge success">Concluído</span></td>
+                                            <td>27 Mai 2026</td>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="table-user"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rafael" alt=""><span>Rafael Costa</span></div></td>
+                                            <td>Compra</td>
+                                            <td class="text-highlight">R$ 3.200,00</td>
+                                            <td><span class="status-badge error">Cancelado</span></td>
+                                            <td>26 Mai 2026</td>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="table-user"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana" alt=""><span>Mariana Santos</span></div></td>
+                                            <td>Assinatura</td>
+                                            <td class="text-highlight">R$ 599,00</td>
+                                            <td><span class="status-badge success">Concluído</span></td>
+                                            <td>26 Mai 2026</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card activity-card">
+                            <div class="card-header">
+                                <h3>Atividade Recente</h3>
+                                <button class="btn btn-ghost" id="filterActivityBtn">Filtrar</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="activity-timeline" id="activityTimeline">
+                                    <div class="activity-item">
+                                        <div class="activity-icon cyan"><i class="fas fa-user-plus"></i></div>
+                                        <div class="activity-content">
+                                            <p><strong>12 novos usuários</strong> registrados nas últimas 24h</p>
+                                            <span class="activity-time">Há 2 minutos</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-icon purple"><i class="fas fa-server"></i></div>
+                                        <div class="activity-content">
+                                            <p><strong>Servidor 3</strong> atualizado para v2.8.1</p>
+                                            <span class="activity-time">Há 15 minutos</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-icon green"><i class="fas fa-check-circle"></i></div>
+                                        <div class="activity-content">
+                                            <p>Deploy do <strong>projeto Alpha</strong> concluído</p>
+                                            <span class="activity-time">Há 1 hora</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-icon orange"><i class="fas fa-exclamation-triangle"></i></div>
+                                        <div class="activity-content">
+                                            <p><strong>Alerta:</strong> Uso de CPU acima de 85%</p>
+                                            <span class="activity-time">Há 2 horas</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-icon red"><i class="fas fa-shield"></i></div>
+                                        <div class="activity-content">
+                                            <p>Tentativa de <strong>acesso não autorizado</strong> bloqueada</p>
+                                            <span class="activity-time">Há 3 horas</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-icon cyan"><i class="fas fa-database"></i></div>
+                                        <div class="activity-content">
+                                            <p><strong>Backup automático</strong> realizado com sucesso</p>
+                                            <span class="activity-time">Há 5 horas</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="server-grid">
+                        <div class="card server-card">
+                            <div class="server-header">
+                                <div class="server-name"><i class="fas fa-server"></i><span>Servidor Principal</span><span class="server-status online">Online</span></div>
+                                <span class="server-uptime">99.9% uptime</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="server-metrics">
+                                    <div class="metric"><div class="metric-header"><span>CPU</span><span class="metric-value">67%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:67%;--color:#00d4ff"></div></div></div>
+                                    <div class="metric"><div class="metric-header"><span>RAM</span><span class="metric-value">82%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:82%;--color:#a855f7"></div></div></div>
+                                    <div class="metric"><div class="metric-header"><span>Disco</span><span class="metric-value">45%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:45%;--color:#10b981"></div></div></div>
+                                    <div class="metric"><div class="metric-header"><span>Rede</span><span class="metric-value">23%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:23%;--color:#f59e0b"></div></div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card server-card">
+                            <div class="server-header">
+                                <div class="server-name"><i class="fas fa-server"></i><span>Servidor API</span><span class="server-status online">Online</span></div>
+                                <span class="server-uptime">99.7% uptime</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="server-metrics">
+                                    <div class="metric"><div class="metric-header"><span>CPU</span><span class="metric-value">42%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:42%;--color:#00d4ff"></div></div></div>
+                                    <div class="metric"><div class="metric-header"><span>RAM</span><span class="metric-value">56%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:56%;--color:#a855f7"></div></div></div>
+                                    <div class="metric"><div class="metric-header"><span>Disco</span><span class="metric-value">31%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:31%;--color:#10b981"></div></div></div>
+                                    <div class="metric"><div class="metric-header"><span>Rede</span><span class="metric-value">68%</span></div><div class="metric-bar"><div class="metric-fill" style="--fill:68%;--color:#f59e0b"></div></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANALYTICS PAGE -->
+                <div class="page" id="page-analytics">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Analytics</h1>
+                            <p class="page-subtitle">Métricas detalhadas e insights</p>
+                        </div>
+                    </div>
+                    <div class="charts-grid full-width">
+                        <div class="card chart-card">
+                            <div class="card-header"><h3>Visitantes por Hora</h3></div>
+                            <div class="card-body chart-body"><canvas id="visitorsChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="stats-grid" style="margin-top:1.5rem">
+                        <div class="stat-card" data-color="cyan"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-eye"></i></div></div><div class="stat-content"><span class="stat-label">Pageviews</span><div class="stat-value-row"><span class="stat-value">142.8K</span><span class="stat-change positive"><i class="fas fa-arrow-up"></i> 18%</span></div></div></div>
+                        <div class="stat-card" data-color="purple"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-content"><span class="stat-label">Tempo Médio</span><div class="stat-value-row"><span class="stat-value">4m 32s</span><span class="stat-change positive"><i class="fas fa-arrow-up"></i> 8%</span></div></div></div>
+                        <div class="stat-card" data-color="green"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-arrow-right-from-bracket"></i></div></div><div class="stat-content"><span class="stat-label">Bounce Rate</span><div class="stat-value-row"><span class="stat-value">32.4%</span><span class="stat-change negative"><i class="fas fa-arrow-down"></i> 2.1%</span></div></div></div>
+                        <div class="stat-card" data-color="orange"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-rotate"></i></div></div><div class="stat-content"><span class="stat-label">Retenção</span><div class="stat-value-row"><span class="stat-value">67.2%</span><span class="stat-change positive"><i class="fas fa-arrow-up"></i> 5%</span></div></div></div>
+                    </div>
+                </div>
+
+                <!-- USUARIOS PAGE -->
+                <div class="page" id="page-usuarios">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Usuários</h1><p class="page-subtitle">Gerenciamento de usuários do sistema</p></div>
+                        <div class="page-actions">
+                            <button class="btn btn-primary" id="newUserBtn"><i class="fas fa-plus"></i> Novo Usuário</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="table-filters">
+                                <div class="search-bar small"><i class="fas fa-search"></i><input type="text" placeholder="Buscar usuário..." id="userSearchInput"></div>
+                                <select class="period-select" id="userFilterSelect">
+                                    <option value="all">Todos</option>
+                                    <option value="active">Ativos</option>
+                                    <option value="inactive">Inativos</option>
+                                    <option value="admin">Admins</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table class="data-table">
+                                <thead><tr><th><label class="custom-checkbox"><input type="checkbox" id="selectAllUsers"><span class="checkmark"></span></label></th><th>Usuário</th><th>Email</th><th>Cargo</th><th>Status</th><th>Ações</th></tr></thead>
+                                <tbody id="usersTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRANSACOES PAGE -->
+                <div class="page" id="page-transacoes">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Transações</h1><p class="page-subtitle">Histórico completo de transações</p></div>
+                        <div class="page-actions">
+                            <button class="btn btn-primary" id="newTransBtn"><i class="fas fa-plus"></i> Nova Transação</button>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card" data-color="cyan"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-receipt"></i></div></div><div class="stat-content"><span class="stat-label">Total</span><div class="stat-value-row"><span class="stat-value">1,247</span></div></div></div>
+                        <div class="stat-card" data-color="green"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div><div class="stat-content"><span class="stat-label">Concluídas</span><div class="stat-value-row"><span class="stat-value">1,089</span></div></div></div>
+                        <div class="stat-card" data-color="orange"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-content"><span class="stat-label">Pendentes</span><div class="stat-value-row"><span class="stat-value">112</span></div></div></div>
+                        <div class="stat-card" data-color="red"><div class="stat-icon-wrapper"><div class="stat-icon"><i class="fas fa-xmark"></i></div></div><div class="stat-content"><span class="stat-label">Canceladas</span><div class="stat-value-row"><span class="stat-value">46</span></div></div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="table-filters">
+                                <div class="search-bar small"><i class="fas fa-search"></i><input type="text" placeholder="Buscar transação..." id="transSearchInput"></div>
+                                <select class="period-select" id="transFilterSelect">
+                                    <option value="all">Todas</option>
+                                    <option value="success">Concluído</option>
+                                    <option value="warning">Pendente</option>
+                                    <option value="error">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body"><table class="data-table"><thead><tr><th>ID</th><th>Cliente</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Data</th></tr></thead><tbody id="transTable"></tbody></table></div>
+                    </div>
+                </div>
+
+                <!-- PROJETOS PAGE -->
+                <div class="page" id="page-projetos">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Projetos</h1><p class="page-subtitle">Acompanhe o andamento dos projetos</p></div>
+                        <div class="page-actions">
+                            <button class="btn btn-primary" id="newProjectBtn"><i class="fas fa-plus"></i> Novo Projeto</button>
+                        </div>
+                    </div>
+                    <div class="projects-grid" id="projectsGrid"></div>
+                </div>
+
+                <!-- TAREFAS PAGE -->
+                <div class="page" id="page-tarefas">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Tarefas</h1><p class="page-subtitle">Gerencie suas tarefas e atividades</p></div>
+                        <div class="page-actions">
+                            <button class="btn btn-primary" id="newTaskBtn"><i class="fas fa-plus"></i> Nova Tarefa</button>
+                        </div>
+                    </div>
+                    <div class="kanban-board" id="kanbanBoard">
+                        <div class="kanban-column" data-status="todo">
+                            <div class="kanban-header"><span class="kanban-dot gray"></span><h3>A Fazer</h3><span class="kanban-count" id="todoCount">0</span></div>
+                            <div class="kanban-list" id="kanbanTodo"></div>
+                        </div>
+                        <div class="kanban-column" data-status="progress">
+                            <div class="kanban-header"><span class="kanban-dot blue"></span><h3>Em Progresso</h3><span class="kanban-count" id="progressCount">0</span></div>
+                            <div class="kanban-list" id="kanbanProgress"></div>
+                        </div>
+                        <div class="kanban-column" data-status="review">
+                            <div class="kanban-header"><span class="kanban-dot orange"></span><h3>Revisão</h3><span class="kanban-count" id="reviewCount">0</span></div>
+                            <div class="kanban-list" id="kanbanReview"></div>
+                        </div>
+                        <div class="kanban-column" data-status="done">
+                            <div class="kanban-header"><span class="kanban-dot green"></span><h3>Concluído</h3><span class="kanban-count" id="doneCount">0</span></div>
+                            <div class="kanban-list" id="kanbanDone"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EQUIPE PAGE -->
+                <div class="page" id="page-equipe">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Equipe</h1><p class="page-subtitle">Gerenciamento de equipes</p></div>
+                        <div class="page-actions">
+                            <button class="btn btn-primary" id="newMemberBtn"><i class="fas fa-plus"></i> Novo Membro</button>
+                        </div>
+                    </div>
+                    <div class="team-grid" id="teamGrid"></div>
+                </div>
+
+                <!-- CALENDARIO PAGE -->
+                <div class="page" id="page-calendario">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Calendário</h1><p class="page-subtitle">Agenda e eventos</p></div>
+                        <div class="page-actions">
+                            <button class="btn btn-primary" id="newEventBtn"><i class="fas fa-plus"></i> Novo Evento</button>
+                        </div>
+                    </div>
+                    <div class="calendar-container">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="calendar-nav">
+                                    <button class="action-btn" id="calPrev"><i class="fas fa-chevron-left"></i></button>
+                                    <h3 id="calMonthYear">Maio 2026</h3>
+                                    <button class="action-btn" id="calNext"><i class="fas fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="calendar-grid" id="calendarGrid"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Próximos Eventos</h3></div>
+                            <div class="card-body">
+                                <div class="events-list" id="eventsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONFIG PAGE -->
+                <div class="page" id="page-config">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Configurações</h1><p class="page-subtitle">Personalize o sistema</p></div>
+                    </div>
+                    <div class="config-grid">
+                        <div class="card">
+                            <div class="card-header"><h3>Perfil</h3></div>
+                            <div class="card-body">
+                                <div class="form-group"><label>Nome</label><input type="text" class="form-input" value="Admin Nexus" id="configName"></div>
+                                <div class="form-group"><label>Email</label><input type="email" class="form-input" value="admin@nexus.io" id="configEmail"></div>
+                                <div class="form-group"><label>Idioma</label><select class="form-input" id="configLang"><option>Português (BR)</option><option>English</option><option>Español</option></select></div>
+                                <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="saveProfileBtn">Salvar Alterações</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Notificações</h3></div>
+                            <div class="card-body">
+                                <div class="toggle-group">
+                                    <div class="toggle-item"><span>Email Notifications</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span>Push Notifications</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span>Security Alerts</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span>Weekly Report</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Aparência</h3></div>
+                            <div class="card-body">
+                                <div class="theme-selector">
+                                    <div class="theme-option active" data-theme="dark"><div class="theme-preview dark-preview"></div><span>Escuro</span></div>
+                                    <div class="theme-option" data-theme="light"><div class="theme-preview light-preview"></div><span>Claro</span></div>
+                                    <div class="theme-option" data-theme="auto"><div class="theme-preview auto-preview"></div><span>Auto</span></div>
+                                </div>
+                                <div class="form-group" style="margin-top:1.5rem"><label>Cor de Destaque</label>
+                                    <div class="color-picker">
+                                        <button class="color-dot active" style="--dot-color:#00d4ff" data-color="#00d4ff"></button>
+                                        <button class="color-dot" style="--dot-color:#a855f7" data-color="#a855f7"></button>
+                                        <button class="color-dot" style="--dot-color:#10b981" data-color="#10b981"></button>
+                                        <button class="color-dot" style="--dot-color:#f59e0b" data-color="#f59e0b"></button>
+                                        <button class="color-dot" style="--dot-color:#ef4444" data-color="#ef4444"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEGURANCA PAGE -->
+                <div class="page" id="page-seguranca">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Segurança</h1><p class="page-subtitle">Configurações de segurança do sistema</p></div>
+                    </div>
+                    <div class="config-grid">
+                        <div class="card">
+                            <div class="card-header"><h3>Autenticação</h3></div>
+                            <div class="card-body">
+                                <div class="toggle-group">
+                                    <div class="toggle-item"><span>Autenticação 2FA</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span>Login com Biometria</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span>Single Sign-On (SSO)</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                    <div class="toggle-item"><span>Bloqueio após falhas</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                                </div>
+                                <div class="form-group" style="margin-top:1.5rem"><label>Tempo de Sessão</label><select class="form-input"><option>30 minutos</option><option selected>1 hora</option><option>2 horas</option><option>4 horas</option></select></div>
+                                <div class="form-group"><label>Tentativas Máximas de Login</label><input type="number" class="form-input" value="5" min="1" max="20"></div>
+                                <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="saveSecurityBtn">Salvar Segurança</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Sessões Ativas</h3></div>
+                            <div class="card-body">
+                                <div class="session-list" id="sessionList"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Logs de Segurança</h3></div>
+                            <div class="card-body">
+                                <div class="security-logs" id="securityLogs"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOGS PAGE -->
+                <div class="page" id="page-logs">
+                    <div class="page-header">
+                        <div><h1 class="page-title">Logs</h1><p class="page-subtitle">Registros do sistema</p></div>
+                        <div class="page-actions">
+                            <button class="btn btn-ghost" id="clearLogsBtn"><i class="fas fa-trash"></i> Limpar</button>
+                            <button class="btn btn-primary" id="exportLogsBtn"><i class="fas fa-download"></i> Exportar</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="table-filters">
+                                <div class="search-bar small"><i class="fas fa-search"></i><input type="text" placeholder="Filtrar logs..." id="logFilterInput"></div>
+                                <select class="period-select" id="logFilterSelect">
+                                    <option value="all">Todos</option>
+                                    <option value="info">INFO</option>
+                                    <option value="warn">WARN</option>
+                                    <option value="error">ERROR</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="terminal" id="systemLogs">
+                                <div class="terminal-line"><span class="log-time">[2026-05-28 09:00:12]</span> <span class="log-info">INFO</span> Sistema iniciado com sucesso</div>
+                                <div class="terminal-line"><span class="log-time">[2026-05-28 09:01:45]</span> <span class="log-warn">WARN</span> Conexão lenta detectada - IP 192.168.1.42</div>
+                                <div class="terminal-line"><span class="log-time">[2026-05-28 09:05:33]</span> <span class="log-info">INFO</span> Backup automático concluído - 2.4GB</div>
+                                <div class="terminal-line"><span class="log-time">[2026-05-28 09:12:07]</span> <span class="log-error">ERROR</span> Falha na autenticação - 3 tentativas de 10.0.0.5</div>
+                                <div class="terminal-line"><span class="log-time">[2026-05-28 09:15:22]</span> <span class="log-info">INFO</span> Deploy v2.8.1 - Produção</div>
+                                <div class="terminal-line"><span class="log-time">[2026-05-28 09:20:44]</span> <span class="log-warn">WARN</span> CPU acima de 85% - Servidor 3</div>
+                                <div class="terminal-line"><span class="log-time">[2026-05-28 09:30:00]</span> <span class="log-info">INFO</span> Health check OK - Todos os serviços</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notifPanel">
+        <div class="notif-header">
+            <h3>Notificações</h3>
+            <button class="btn btn-ghost btn-sm" id="markAllReadBtn">Marcar todas como lidas</button>
+        </div>
+        <div class="notif-list" id="notifList">
+            <div class="notif-item unread" data-id="1">
+                <div class="notif-icon" style="background:rgba(0,212,255,0.15);color:#00d4ff"><i class="fas fa-user-plus"></i></div>
+                <div class="notif-content"><p>12 novos usuários registrados</p><span>Há 2 min</span></div>
+            </div>
+            <div class="notif-item unread" data-id="2">
+                <div class="notif-icon" style="background:rgba(168,85,247,0.15);color:#a855f7"><i class="fas fa-server"></i></div>
+                <div class="notif-content"><p>Servidor 3 atualizado v2.8.1</p><span>Há 15 min</span></div>
+            </div>
+            <div class="notif-item unread" data-id="3">
+                <div class="notif-icon" style="background:rgba(16,185,129,0.15);color:#10b981"><i class="fas fa-rocket"></i></div>
+                <div class="notif-content"><p>Deploy projeto Alpha concluído</p><span>Há 1 hora</span></div>
+            </div>
+            <div class="notif-item" data-id="4">
+                <div class="notif-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="notif-content"><p>Alerta: CPU acima de 85%</p><span>Há 2 horas</span></div>
+            </div>
+            <div class="notif-item" data-id="5">
+                <div class="notif-icon" style="background:rgba(239,68,68,0.15);color:#ef4444"><i class="fas fa-shield"></i></div>
+                <div class="notif-content"><p>Acesso não autorizado bloqueado</p><span>Há 3 horas</span></div>
+            </div>
+        </div>
+    </div>
+
+<!-- Message Panel -->
+<div class="message-panel" id="messagePanel">
+  <div class="msg-contacts-view" id="msgContactsView">
+    <div class="notif-header">
+      <h3>Mensagens</h3>
+      <button class="btn btn-ghost btn-sm" id="closeMsgBtn"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="msg-list" id="msgList"></div>
+  </div>
+  <div class="msg-chat-view" id="msgChatView" style="display:none">
+    <div class="msg-chat-header">
+      <button class="action-btn" id="msgBackBtn" style="width:30px;height:30px;font-size:0.7rem"><i class="fas fa-arrow-left"></i></button>
+      <div class="msg-chat-user" id="msgChatUserName"></div>
+    </div>
+    <div class="msg-chat-messages" id="msgChatMessages"></div>
+    <div class="msg-chat-input-wrap">
+      <input type="text" class="form-input" id="msgChatInput" placeholder="Digite uma mensagem...">
+      <button class="btn btn-primary btn-sm" id="msgChatSendBtn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+    <!-- Command Palette -->
+    <div class="command-palette-overlay" id="commandOverlay"></div>
+    <div class="command-palette" id="commandPalette">
+        <div class="command-input-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar páginas, ações..." id="commandInput">
+            <kbd>Esc</kbd>
+        </div>
+        <div class="command-results" id="commandResults"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal</h3>
+                <button class="modal-close" id="modalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter">
+                <button class="btn btn-ghost" id="modalCancel">Cancelar</button>
+                <button class="btn btn-primary" id="modalConfirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
