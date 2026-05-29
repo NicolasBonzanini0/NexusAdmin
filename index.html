@@ -50,9 +50,10 @@
         <a href="#" class="auth-forgot" id="forgotPwLink" data-i18n="auth.forgot">Esqueceu a senha?</a>
       </div>
 <button type="submit" class="auth-submit" data-i18n="auth.login">Entrar</button>
+</form>
 
-    <!-- SIGNUP FORM -->
-    <form class="auth-form" id="signupForm" style="display:none" autocomplete="off">
+<!-- SIGNUP FORM -->
+<form class="auth-form" id="signupForm" style="display:none" autocomplete="off">
       <div class="auth-field">
         <i class="fas fa-user"></i>
         <input type="text" placeholder="Nome completo" id="signupName" data-i18n-placeholder="auth.name" required>
@@ -79,8 +80,8 @@
 <p class="auth-terms" data-i18n-html="auth.terms">Ao criar uma conta, você concorda com os <a href="#" id="termsLink">Termos de Uso</a> e <a href="#" id="privacyLink">Política de Privacidade</a>.</p>
     </form>
 
-    <button class="auth-demo-btn" id="authDemoBtn" type="button"><i class="fas fa-play-circle"></i> <span data-i18n="auth.demo">Demonstração</span></button>
-  </div>
+<button class="auth-demo-btn" id="authDemoBtn" type="button"><i class="fas fa-play-circle"></i> <span data-i18n="auth.demo">Demonstração</span></button>
+</div>
 </div>
 
 <!-- 2FA VERIFICATION OVERLAY -->
@@ -861,7 +862,7 @@
                             <div class="card-body">
                                 <div class="form-group"><label data-i18n="config.name">Nome</label><input type="text" class="form-input" value="Admin Nexus" id="configName"></div>
                                 <div class="form-group"><label data-i18n="config.emailLabel">Email</label><input type="email" class="form-input" value="admin@nexus.io" id="configEmail"></div>
-                                <div class="form-group"><label data-i18n="config.language">Idioma</label><select class="form-input" id="configLang"><option>Português (BR)</option><option>English</option><option>Español</option></select></div>
+                                <div class="form-group"><label data-i18n="config.language">Idioma</label><select class="form-input" id="configLang"><option value="pt-BR">Português (BR)</option><option value="en">English</option><option value="es">Español</option></select></div>
                                 <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="saveProfileBtn" data-i18n="config.save">Salvar Alterações</button>
                             </div>
                         </div>
@@ -899,24 +900,24 @@
                             <div class="card-header"><h3 data-i18n="sec.auth">Autenticação</h3></div>
                             <div class="card-body">
                                 <div class="toggle-group">
-                                    <div class="toggle-item"><span>Autenticação 2FA</span><label class="toggle-switch"><input type="checkbox" id="toggle2FA"><span class="toggle-slider"></span></label></div>
-                                    <div class="toggle-item"><span>Login com Biometria</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
-                                    <div class="toggle-item"><span>Single Sign-On (SSO)</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
-                                    <div class="toggle-item"><span>Bloqueio após falhas</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+<div class="toggle-item"><span data-i18n="sec.2fa">Autenticação 2FA</span><label class="toggle-switch"><input type="checkbox" id="toggle2FA"><span class="toggle-slider"></span></label></div>
+<div class="toggle-item"><span data-i18n="sec.biometry">Login com Biometria</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+<div class="toggle-item"><span data-i18n="sec.sso">Single Sign-On (SSO)</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+<div class="toggle-item"><span data-i18n="sec.lockOnFail">Bloqueio após falhas</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
                                 </div>
-                                <div class="form-group" style="margin-top:1.5rem"><label>Tempo de Sessão</label><select class="form-input"><option>30 minutos</option><option selected>1 hora</option><option>2 horas</option><option>4 horas</option></select></div>
-                                <div class="form-group"><label>Tentativas Máximas de Login</label><input type="number" class="form-input" value="5" min="1" max="20"></div>
-                                <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="saveSecurityBtn">Salvar Segurança</button>
+                                <div class="form-group" style="margin-top:1.5rem"><label data-i18n="sec.sessionTime">Tempo de Sessão</label><select class="form-input"><option>30 minutos</option><option selected>1 hora</option><option>2 horas</option><option>4 horas</option></select></div>
+                                <div class="form-group"><label data-i18n="sec.maxLoginAttempts">Tentativas Máximas de Login</label><input type="number" class="form-input" value="5" min="1" max="20"></div>
+                                <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="saveSecurityBtn" data-i18n="sec.saveSecurity">Salvar Segurança</button>
                             </div>
                         </div>
                         <div class="card">
-                            <div class="card-header"><h3>Sessões Ativas</h3></div>
+                            <div class="card-header"><h3 data-i18n="sec.activeSessions">Sessões Ativas</h3></div>
                             <div class="card-body">
                                 <div class="session-list" id="sessionList"></div>
                             </div>
                         </div>
                         <div class="card">
-                            <div class="card-header"><h3>Logs de Segurança</h3></div>
+                            <div class="card-header"><h3 data-i18n="sec.securityLogs">Logs de Segurança</h3></div>
                             <div class="card-body">
                                 <div class="security-logs" id="securityLogs"></div>
                             </div>
@@ -927,10 +928,10 @@
                 <!-- LOGS PAGE -->
                 <div class="page" id="page-logs">
                     <div class="page-header">
-                        <div><h1 class="page-title">Logs</h1><p class="page-subtitle">Registros do sistema</p></div>
+                        <div><h1 class="page-title" data-i18n="logs.title">Logs</h1><p class="page-subtitle" data-i18n="logs.subtitle">Registros do sistema</p></div>
                         <div class="page-actions">
-                            <button class="btn btn-ghost" id="clearLogsBtn"><i class="fas fa-trash"></i> Limpar</button>
-                            <button class="btn btn-primary" id="exportLogsBtn"><i class="fas fa-download"></i> Exportar</button>
+<button class="btn btn-ghost" id="clearLogsBtn"><i class="fas fa-trash"></i> <span data-i18n="logs.clear">Limpar</span></button>
+<button class="btn btn-primary" id="exportLogsBtn"><i class="fas fa-download"></i> <span data-i18n="logs.export">Exportar</span></button>
                         </div>
                     </div>
                     <div class="card">
@@ -965,9 +966,9 @@
     <!-- Notification Panel -->
     <div class="notification-panel" id="notifPanel">
 <div class="notif-header">
-  <h3>Notificações</h3>
+  <h3 data-i18n="notif.title">Notificações</h3>
   <div style="display:flex;gap:0.5rem">
-    <button class="btn btn-ghost btn-sm" id="markAllReadBtn">Marcar todas como lidas</button>
+    <button class="btn btn-ghost btn-sm" id="markAllReadBtn" data-i18n="notif.markAllRead">Marcar todas como lidas</button>
     <button class="btn btn-ghost btn-sm" id="closeNotifBtn"><i class="fas fa-xmark"></i></button>
   </div>
 </div>
@@ -999,7 +1000,7 @@
 <div class="message-panel" id="messagePanel">
   <div class="msg-contacts-view" id="msgContactsView">
     <div class="notif-header">
-      <h3>Mensagens</h3>
+      <h3 data-i18n="msg.title">Mensagens</h3>
       <button class="btn btn-ghost btn-sm" id="closeMsgBtn"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="msg-list" id="msgList"></div>
@@ -1011,7 +1012,7 @@
     </div>
     <div class="msg-chat-messages" id="msgChatMessages"></div>
     <div class="msg-chat-input-wrap">
-      <input type="text" class="form-input" id="msgChatInput" placeholder="Digite uma mensagem...">
+      <input type="text" class="form-input" id="msgChatInput" placeholder="Digite uma mensagem..." data-i18n-placeholder="msg.placeholder">
       <button class="btn btn-primary btn-sm" id="msgChatSendBtn"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
@@ -1022,7 +1023,7 @@
     <div class="command-palette" id="commandPalette">
         <div class="command-input-wrap">
             <i class="fas fa-search"></i>
-            <input type="text" placeholder="Buscar páginas, ações..." id="commandInput">
+            <input type="text" placeholder="Buscar páginas, ações..." data-i18n-placeholder="cmd.placeholder" id="commandInput">
             <kbd>Esc</kbd>
         </div>
         <div class="command-results" id="commandResults"></div>

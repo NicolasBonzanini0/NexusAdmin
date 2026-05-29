@@ -1204,7 +1204,7 @@ function renderUsers(filter = 'all', search = '') {
       <td><div class="table-user"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${u.seed}" alt=""><span>${u.name}</span></div></td>
       <td>${u.email}</td>
       <td>${u.role}</td>
-      <td><span class="status-badge ${u.status === 'Ativo' ? 'success' : 'warning'}">${u.status}</span></td>
+      <td><span class="status-badge ${u.status === 'Ativo' ? 'success' : 'warning'}">${u.status === 'Ativo' ? i18n.t('status.active') : i18n.t('status.inactive')}</span></td>
       <td>
         <button class="action-btn edit-user-btn" style="width:28px;height:28px;font-size:0.7rem" data-id="${u.id}"><i class="fas fa-pen"></i></button>
         <button class="action-btn delete-user-btn" style="width:28px;height:28px;font-size:0.7rem;margin-left:2px" data-id="${u.id}"><i class="fas fa-trash"></i></button>
@@ -1309,7 +1309,7 @@ function initUsersPage() {
         let trans = state.transactions;
         if (filter !== 'all') trans = trans.filter(t => t.status === filter);
         if (search) trans = trans.filter(t => t.client.toLowerCase().includes(search.toLowerCase()) || t.id.toLowerCase().includes(search.toLowerCase()));
-        const statusLabels = { success: 'Concluído', warning: 'Pendente', error: 'Cancelado' };
+        const statusLabels = { success: i18n.t('status.success'), warning: i18n.t('status.warning'), error: i18n.t('status.error') };
         $('#transTable').innerHTML = trans.map(t => `
             <tr>
                 <td class="text-highlight">${t.id}</td>
@@ -1405,7 +1405,7 @@ list.innerHTML = tasks.map(t => `
 <div class="kanban-card-title">${t.title}</div>
 <div class="kanban-card-desc">${t.desc}</div>
 <div class="kanban-card-footer">
-<span class="kanban-card-priority ${t.priority}">${t.priority === 'high' ? 'Alta' : t.priority === 'medium' ? 'Média' : 'Baixa'}</span>
+<span class="kanban-card-priority ${t.priority}">${t.priority === 'high' ? i18n.t('tasks.high') : t.priority === 'medium' ? i18n.t('tasks.medium') : i18n.t('tasks.low')}</span>
 <div class="kanban-move-btns">
 <button class="kanban-move-btn" data-task-id="${t.id}" data-dir="left" title="Mover para esquerda"><i class="fas fa-chevron-left"></i></button>
 <button class="kanban-move-btn" data-task-id="${t.id}" data-dir="right" title="Mover para direita"><i class="fas fa-chevron-right"></i></button>
@@ -1464,7 +1464,7 @@ toast(`"${task.title}" movido para ${statusLabel(stages[newIdx])}`, 'info');
     });
   }
 }
-    function statusLabel(s) { return { todo: 'A Fazer', progress: 'Em Progresso', review: 'Revisão', done: 'Concluído' }[s] || s; }
+    function statusLabel(s) { return { todo: i18n.t('tasks.todo'), progress: i18n.t('tasks.progress'), review: i18n.t('tasks.review'), done: i18n.t('tasks.done') }[s] || s; }
     function showNewTaskModal() {
         openModal('Nova Tarefa', `
             <div class="form-group"><label>Título</label><input type="text" class="form-input" id="newTaskTitle" placeholder="Título da tarefa"></div>
@@ -1527,7 +1527,7 @@ toast(`"${task.title}" movido para ${statusLabel(stages[newIdx])}`, 'info');
         const now = new Date();
         const month = state.calMonth;
         const year = state.calYear;
-        const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const months = i18n._calMonths || ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         $('#calMonthYear').textContent = `${months[month]} ${year}`;
 
         const firstDay = new Date(year, month, 1).getDay();
@@ -1535,7 +1535,7 @@ toast(`"${task.title}" movido para ${statusLabel(stages[newIdx])}`, 'info');
         const daysInPrevMonth = new Date(year, month, 0).getDate();
 
         let html = '';
-        const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const dayNames = i18n._calDays || ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         dayNames.forEach(d => { html += `<div class="cal-header">${d}</div>`; });
 
         const eventDays = state.events.map(e => e.date);
