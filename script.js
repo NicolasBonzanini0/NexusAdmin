@@ -82,6 +82,8 @@ translations: {
 'sec.saveSecurity': 'Salvar Segurança',
 'sec.activeSessions': 'Sessões Ativas',
 'sec.securityLogs': 'Logs de Segurança',
+'sec.current': 'ATUAL',
+'sec.revoke': 'Revogar',
 'sec.30min': '30 minutos',
 'sec.1h': '1 hora',
 'sec.2h': '2 horas',
@@ -94,6 +96,10 @@ translations: {
 'tasks.medium': 'Média',
 'tasks.low': 'Baixa',
 'tasks.newTask': 'Nova Tarefa',
+'tasks.title': 'Tarefas',
+'tasks.subtitle': 'Gerencie suas tarefas e atividades',
+'tasks.new': 'Nova Tarefa',
+'users.search': 'Buscar usuário...',
 'users.title': 'Usuários',
 'users.subtitle': 'Gerenciamento de usuários do sistema',
 'users.newUser': 'Novo Usuário',
@@ -225,6 +231,8 @@ translations: {
 'sec.saveSecurity': 'Save Security',
 'sec.activeSessions': 'Active Sessions',
 'sec.securityLogs': 'Security Logs',
+'sec.current': 'CURRENT',
+'sec.revoke': 'Revoke',
 'sec.30min': '30 minutes',
 'sec.1h': '1 hour',
 'sec.2h': '2 hours',
@@ -237,6 +245,10 @@ translations: {
 'tasks.medium': 'Medium',
 'tasks.low': 'Low',
 'tasks.newTask': 'New Task',
+'tasks.title': 'Tasks',
+'tasks.subtitle': 'Manage your tasks and activities',
+'tasks.new': 'New Task',
+'users.search': 'Search user...',
 'users.title': 'Users',
 'users.subtitle': 'System user management',
 'users.newUser': 'New User',
@@ -368,6 +380,8 @@ translations: {
 'sec.saveSecurity': 'Guardar Seguridad',
 'sec.activeSessions': 'Sesiones Activas',
 'sec.securityLogs': 'Logs de Seguridad',
+'sec.current': 'ACTUAL',
+'sec.revoke': 'Revocar',
 'sec.30min': '30 minutos',
 'sec.1h': '1 hora',
 'sec.2h': '2 horas',
@@ -380,6 +394,10 @@ translations: {
 'tasks.medium': 'Media',
 'tasks.low': 'Baja',
 'tasks.newTask': 'Nueva Tarea',
+'tasks.title': 'Tareas',
+'tasks.subtitle': 'Gestiona tus tareas y actividades',
+'tasks.new': 'Nueva Tarea',
+'users.search': 'Buscar usuario...',
 'users.title': 'Usuarios',
 'users.subtitle': 'Gestión de usuarios del sistema',
 'users.newUser': 'Nuevo Usuario',
@@ -463,7 +481,16 @@ if (tr[key]) el.placeholder = tr[key];
 });
 document.querySelectorAll('[data-i18n-html]').forEach(el => {
 const key = el.dataset.i18nHtml;
-if (tr[key]) el.innerHTML = tr[key];
+if (tr[key]) {
+let html = tr[key];
+const termsEl = el.querySelector('#termsLink');
+const privacyEl = el.querySelector('#privacyLink');
+const termsText = termsEl ? termsEl.textContent : this.t('auth.termsLink');
+const privacyText = privacyEl ? privacyEl.textContent : this.t('auth.privacyLink');
+html = html.replace('{terms}', `<a href="#" id="termsLink">${termsText}</a>`);
+html = html.replace('{privacy}', `<a href="#" id="privacyLink">${privacyText}</a>`);
+el.innerHTML = html;
+}
 });
 const calMonths = tr['cal.months'];
 if (calMonths) this._calMonths = calMonths.split(',');
@@ -1589,7 +1616,7 @@ toast(`"${task.title}" movido para ${statusLabel(stages[newIdx])}`, 'info');
             <div class="session-item">
                 <div class="session-icon"><i class="fas ${s.icon}"></i></div>
                 <div class="session-info"><div class="session-device">${s.device}</div><div class="session-meta">${s.ip} — ${s.time}</div></div>
-                ${s.current ? '<span class="session-current">ATUAL</span>' : '<button class="btn btn-danger btn-sm" onclick="document.dispatchEvent(new CustomEvent(\'revokeSession\'))">Revogar</button>'}
+                ${s.current ? '<span class="session-current">' + i18n.t('sec.current') + '</span>' : '<button class="btn btn-danger btn-sm" onclick="document.dispatchEvent(new CustomEvent(\'revokeSession\'))">' + i18n.t('sec.revoke') + '</button>'}
             </div>
         `).join('');
         $('#securityLogs').innerHTML = state.securityLogs.map(l => `
@@ -1776,38 +1803,45 @@ async function initAuth() {
 i18n.loadSavedLang();
 i18n.applyAll();
 const authScreen = $('#authScreen');
-  const appContainer = $('#appContainer');
-  const loginForm = $('#loginForm');
-  const signupForm = $('#signupForm');
-  const tabs = $$('.auth-tab');
-  const signupPw = $('#signupPassword');
-  const strengthFill = $('#pwStrengthFill');
-  const strengthLabel = $('#pwStrengthLabel');
+const appContainer = $('#appContainer');
+const loginForm = $('#loginForm');
+const signupForm = $('#signupForm');
+const tabs = $$('.auth-tab');
+const signupPw = $('#signupPassword');
+const strengthFill = $('#pwStrengthFill');
+const strengthLabel = $('#pwStrengthLabel');
 
-  let twoFaCode = '';
-  let twoFaTimer = null;
-  let twoFaSeconds = 300;
-  let pendingLoginUser = null;
+const demoBtn = $('#authDemoBtn');
+if (demoBtn) demoBtn.addEventListener('click', () => { toast('Modo demonstração ativado', 'info'); showApp(true); });
 
-  state.authUsers = await db.getAllUsers();
-  if (state.authUsers.length === 0) {
-    const defaultPw = await crypto.hashPw('admin123');
-    state.authUsers.push({ name: 'Admin Nexus', email: 'admin@nexus.io', password: defaultPw, twoFa: false, profile: { tasks: [], transactions: [], projects: [] } });
-    await db.saveAllUsers(state.authUsers);
-  }
+let twoFaCode = '';
+let twoFaTimer = null;
+let twoFaSeconds = 300;
+let pendingLoginUser = null;
 
-  if (db.needsWeeklyReset()) { db.doWeeklyReset(); }
+try { state.authUsers = await db.getAllUsers(); } catch(e) { state.authUsers = []; }
+if (state.authUsers.length === 0) {
+try {
+const defaultPw = await crypto.hashPw('admin123');
+state.authUsers.push({ name: 'Admin Nexus', email: 'admin@nexus.io', password: defaultPw, twoFa: false, profile: { tasks: [], transactions: [], projects: [] } });
+await db.saveAllUsers(state.authUsers);
+} catch(e) {}
+}
 
-  async function verifyPw(inputPw, storedHash) {
-    if (storedHash.length !== 64) {
-      const h = await crypto.hashPw(storedHash);
-      if (h.length === 64) { const u = state.authUsers.find(u => u.password === storedHash); if (u) { u.password = h; saveUsers(); } return inputPw === storedHash; }
-      return inputPw === storedHash;
-    }
-    return (await crypto.hashPw(inputPw)) === storedHash;
-  }
+try { if (db.needsWeeklyReset()) db.doWeeklyReset(); } catch(e) {}
 
-  function showApp(demoMode) {
+async function verifyPw(inputPw, storedHash) {
+try {
+if (storedHash.length !== 64) {
+const h = await crypto.hashPw(storedHash);
+if (h.length === 64) { const u = state.authUsers.find(u => u.password === storedHash); if (u) { u.password = h; saveUsers(); } return inputPw === storedHash; }
+return inputPw === storedHash;
+}
+return (await crypto.hashPw(inputPw)) === storedHash;
+} catch(e) { return false; }
+}
+
+function showApp(demoMode) {
     if (demoMode) {
       state.currentUser = { name: 'Usuário Demo', email: 'demo@nexus.io', demo: true, twoFa: false, profile: { tasks: [], transactions: [], projects: [] } };
     }
@@ -2045,8 +2079,7 @@ const authScreen = $('#authScreen');
   $('#privacyClose').addEventListener('click', () => closeOverlay('#privacyOverlay'));
   $('#privacyOverlay').addEventListener('click', e => { if (e.target.id === 'privacyOverlay') closeOverlay('#privacyOverlay'); });
 
-  // DEMO
-  $('#authDemoBtn').addEventListener('click', () => { toast('Modo demonstração ativado', 'info'); showApp(true); });
+// DEMO (registered earlier)
 }
 
 function initDashboard() {
