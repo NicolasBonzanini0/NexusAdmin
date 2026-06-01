@@ -9,7 +9,7 @@ Painel de gerenciamento e administração com tema escuro futurista, efeitos neo
 ![Supabase](https://img.shields.io/badge/Supabase-Ready-3ecf8e?style=flat-square)
 ![Licença](https://img.shields.io/badge/Licença-MIT-ef4444?style=flat-square)
 
-**Demo:** [nexusadmin.vercel.app](https://nexusadmin.vercel.app)
+**Demo:** [nexusadmin.vercel.app](https://nexusadmin-iota.vercel.app)
 
 ---
 
